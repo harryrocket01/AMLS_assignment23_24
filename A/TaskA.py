@@ -55,10 +55,16 @@ class Task_A:
         self.y_val = Pneumonia_val_labels
         self.y_test = Pneumonia_test_labels
 
-        #self.X_test = Preprocessing(self.X_test,self.y_test).New_Data()
+        #self.X_test = PreProcessing(self.X_test,self.y_test).New_Data()
         self.X_val = PreProcessing(self.X_val,self.y_val).New_Data()
         self.X_train = PreProcessing(self.X_train,self.y_train).New_Data()
 
+
+        self.X_train = PreProcessing.Normalisation(self.X_train)
+        self.X_val = PreProcessing.Normalisation(self.X_val)
+        self.X_test = PreProcessing.Normalisation(self.X_test)
+
+        
         Plotting.Data_Represenation(self.X_train,self.y_train)
 
     def RunSVM(self):
@@ -107,7 +113,7 @@ Class = Task_A()
 #Class.RunRF()
 #Class.RunAdaboost()
 
-#Class.RunNN()
+Class.RunNN()
 
 
 

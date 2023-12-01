@@ -6,7 +6,7 @@ from scipy.ndimage import rotate
 
 class PreProcessing():
 
-    def __init__(self,Dataset,Lables) -> None:
+    def __init__(self,Dataset=None,Lables=None) -> None:
         self.Dataset = Dataset
         self.Lables = Lables
 
@@ -79,3 +79,9 @@ class PreProcessing():
         to_return = np.array(Processed).reshape((len(Processed), 28, 28, 1))
 
         return to_return#, Labels
+
+    def Normalisation(Dataset):
+
+        normalized_images = Dataset.astype('float32') / 255.0
+
+        return normalized_images
