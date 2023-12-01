@@ -4,7 +4,7 @@ import numpy as np
 import random
 from scipy.ndimage import rotate
 
-class Preprocessing():
+class PreProcessing():
 
     def __init__(self,Dataset,Lables) -> None:
         self.Dataset = Dataset
@@ -69,9 +69,9 @@ class Preprocessing():
         Processed = []
         Labels = []
         for Loop in range(0,Loops):
-            Flipped = Preprocessing(self.Dataset,self.Lables).Flip()
-            Noise = Preprocessing(Flipped,self.Lables).Noise()
-            Rotated = Preprocessing(Noise,self.Lables).Rotate()
+            Flipped = PreProcessing(self.Dataset,self.Lables).Flip()
+            Noise = PreProcessing(Flipped,self.Lables).Noise()
+            Rotated = PreProcessing(Noise,self.Lables).Rotate()
 
             Processed = Processed+Rotated
             Labels += self.Lables

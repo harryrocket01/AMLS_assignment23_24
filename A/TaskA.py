@@ -12,7 +12,7 @@ import numpy as np
 from Models.SVM import SVM, SVM_HOG
 from Models.RandomForest import RandomForest, ADABoost
 from Models.NN import NN
-from preprocessing import Preprocessing
+from PreProcessing import PreProcessing
 
 class Task_A:
     
@@ -56,8 +56,8 @@ class Task_A:
         self.y_test = Pneumonia_test_labels
 
         #self.X_test = Preprocessing(self.X_test,self.y_test).New_Data()
-        self.X_val = Preprocessing(self.X_val,self.y_val).New_Data()
-        self.X_train = Preprocessing(self.X_train,self.y_train).New_Data()
+        self.X_val = PreProcessing(self.X_val,self.y_val).New_Data()
+        self.X_train = PreProcessing(self.X_train,self.y_train).New_Data()
 
         Plotting.Data_Represenation(self.X_train,self.y_train)
 
@@ -104,8 +104,8 @@ Class = Task_A()
 #Class.RunSVM()
 #Class.RunSVM_HOG()
 
-Class.RunRF()
-Class.RunAdaboost()
+#Class.RunRF()
+#Class.RunAdaboost()
 
 #Class.RunNN()
 
