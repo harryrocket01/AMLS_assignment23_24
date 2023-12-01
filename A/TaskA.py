@@ -1,7 +1,7 @@
-
 #import subprocess
 #import sys
-#subprocess.check_call([sys.executable, "-m", "pip", "install", "scikit-image"])
+#subprocess.check_call([sys.executable, "-m", "pip", "install", "tensorflow"])
+
 import os 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
@@ -12,7 +12,7 @@ import numpy as np
 from Models.SVM import SVM, SVM_HOG
 from Models.RandomForest import RandomForest, ADABoost
 from Models.NN import NN
-
+from preprocessing import Preprocessing
 
 class Task_A:
     
@@ -55,7 +55,11 @@ class Task_A:
         self.y_val = Pneumonia_val_labels
         self.y_test = Pneumonia_test_labels
 
-        #Plotting.Data_Represenation(self.X_train,self.y_train)
+        #self.X_test = Preprocessing(self.X_test,self.y_test).New_Data()
+        self.X_val = Preprocessing(self.X_val,self.y_val).New_Data()
+        self.X_train = Preprocessing(self.X_train,self.y_train).New_Data()
+
+        Plotting.Data_Represenation(self.X_train,self.y_train)
 
     def RunSVM(self):
         Model = SVM(self.X_train,self.y_train,self.X_val,self.y_val,self.X_test,self.y_test)
