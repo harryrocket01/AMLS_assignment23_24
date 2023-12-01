@@ -32,9 +32,9 @@ from sklearn import svm
 from sklearn.preprocessing import StandardScaler
 from skimage.color import rgb2gray
 
-import tensorflow as tf
+#import tensorflow as tf
 
-from tensorflow.keras import datasets, layers, models
+#from tensorflow.keras import datasets, layers, models
 
 
 
@@ -243,9 +243,9 @@ y_test = Pneumonia_test_labels
 
 
 
-Temp = Binary_Exploration(X_train,y_train,X_val,y_val,X_test,y_test)
+Temp = Final_Binary_Classifcation()
 
-Temp.CNN("adam")
+Temp.SVM(X_train,y_train,X_val,y_val,X_test,y_test)
 #Temp.CNN("RMSprop")
 #Temp.CNN("Adagrad")
 #Temp.CNN("Nadam")
