@@ -2,6 +2,7 @@
 import numpy as np
 import random
 from scipy.ndimage import rotate
+from keras.utils import to_categorical
 
 class PreProcessing():
 
@@ -113,3 +114,11 @@ class PreProcessing():
         normalized_images = Dataset.astype('float32') / 255.0
 
         return normalized_images
+
+    def one_hot_encode(train,val,test):
+        one_hot_train = to_categorical(train, num_classes=10)
+        one_hot_val = to_categorical(val, num_classes=10) 
+        one_hot_test = to_categorical(test, num_classes=10) 
+
+
+        return np.array(one_hot_train),np.array(one_hot_val),np.array(one_hot_test)

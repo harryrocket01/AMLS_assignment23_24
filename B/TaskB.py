@@ -55,9 +55,8 @@ class Task_B:
         self.X_val = Path_val_images.reshape((n_val_samples, 28, 28, 3))  
         self.X_test = Path_test_images.reshape((n_test_samples, 28, 28, 3))
 
-        self.y_train = Path_train_labels
-        self.y_val = Path_val_labels
-        self.y_test = Path_test_labels
+
+        self.y_train,self.y_val,self.y_test = PreProcessing.one_hot_encode(Path_train_labels,Path_val_labels,Path_test_labels)
 
         self.X_test = PreProcessing(self.X_test,self.y_test).data_augmentation()
         self.X_val = PreProcessing(self.X_val,self.y_val).data_augmentation()
