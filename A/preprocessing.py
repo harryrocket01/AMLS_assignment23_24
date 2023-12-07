@@ -32,7 +32,7 @@ class PreProcessing():
         to_return = Rotated#np.array(Rotated).reshape((len(Rotated), 28, 28, 1))
         return to_return
 
-    def Noise(self, mean=0, sigma=10):
+    def Noise(self, mean=0, sigma=5):
         Noisy = []
 
         for Image in self.Dataset:
@@ -58,7 +58,7 @@ class PreProcessing():
 
             elif type == 2:
                 flipped_image = np.flip(Image,axis=0)
-                flipped_image = np.flip(flipped_image,axis=0)
+                flipped_image = np.flip(flipped_image,axis=1)
 
             Flipped.append(flipped_image )
 

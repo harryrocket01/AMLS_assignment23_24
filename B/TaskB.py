@@ -1,24 +1,32 @@
+
+
+
+
+
+#import subprocess
+#import sys
+#subprocess.check_call([sys.executable, "-m", "pip", "install", "tensorflow"])
+from PreProcessing import PreProcessing
+
+import os 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+
 from Plotting import Plotting
 
 import numpy as np
 
-from Multivariate_Models import MV_Models
+#from Models.SVM import SVM, SVM_HOG
 
-import os
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
-
-class Task_A:
-    pass
-
-class MV_Classification_Base:
+class Task_B:
     
     def __init__ (self):
-
         directory = "Datasets\pathmnist.npz"
 
         PathMNIST = np.load(directory)
 
         print("Keys in PathMNIST: ", list(PathMNIST.keys()))
+
+
 
 
         #Extract Pneumonia
@@ -51,19 +59,20 @@ class MV_Classification_Base:
         self.y_val = Path_val_labels
         self.y_test = Path_test_labels
 
-        #Plotting.Data_Represenation( self.X_train, self.y_train)
-
-        MV_Models(self.X_train,self.y_train,self.X_val,self.y_val,self.X_test,self.y_test).CNN(epochs=5)
-
-
-if __name__ == '__main__':
-
-    MV_Classification_Base()
+        self.X_test = PreProcessing(self.X_test,self.y_test).data_augmentation()
+        self.X_val = PreProcessing(self.X_val,self.y_val).data_augmentation()
+        self.X_train = PreProcessing(self.X_train,self.y_train).data_augmentation()
 
 
+        self.X_train = PreProcessing.normalisation(self.X_train)
+        self.X_val = PreProcessing.normalisation(self.X_val)
+        self.X_test = PreProcessing.normalisation(self.X_test)
 
+        Plotting.Data_Represenation(self.X_train,self.y_train)
 
+    def RunSVM(self):
+        pass
 
-
+Class = Task_B()
 
 
