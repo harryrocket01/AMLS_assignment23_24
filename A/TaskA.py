@@ -100,7 +100,7 @@ class Task_A:
     def RunNN(self):
         Model = NN(self.X_train,self.y_train,self.X_val,self.y_val,self.X_test,self.y_test)
 
-        Model.SetModel(Model="cnn")
+        Model.SetModel(Model="resnet")
         Model.Train()
         Model.Test()
 
