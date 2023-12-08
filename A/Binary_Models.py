@@ -93,8 +93,10 @@ class Sequential_Models():
         model.add(layers.Dense(10))
 
         return model
-    def Xception():
+    
+    def Deep():
         pass
+
     def VGG():
         pass
     def ResNet():

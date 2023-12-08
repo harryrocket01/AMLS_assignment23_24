@@ -100,8 +100,11 @@ class Task_A:
     def RunNN(self):
         Model = NN(self.X_train,self.y_train,self.X_val,self.y_val,self.X_test,self.y_test)
 
-        Model.SetModel(Model="resnet")
-        Model.Train()
+        model = ""
+
+
+        Model.SetModel("Alt")
+        Model.Train(epochs=100,batchsize = 32,learningrate = 0.001)
         Model.Test()
 
 

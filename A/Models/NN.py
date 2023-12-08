@@ -44,9 +44,16 @@ class NN(ML_Template):
         Model = Model.lower()
         if Model == "resnet":
             self.model = Sequential_Models.ResNet()
+        elif Model =="ManyLayers":
+            self.model = Sequential_Models.ManyLayers()
+        elif Model =="Alt":
+            self.model = Sequential_Models.Alt()
+        elif Model =="":
+            pass
         else:
             self.model = Sequential_Models.Default()
         
+        print(self.model.summary())
         self.name = Model
 
 
@@ -54,28 +61,33 @@ class NN(ML_Template):
     #based off of the Keras Documentation
 
     def Train(self,epochs=None,batchsize = None,learningrate = None):
-        
-        #Check if there is a file
-        filename = self.name+"Model.keras"
-        try:
-            self.model = tf.keras.models.load_model(filename)
-
-        except:
-            self.TrainLoop(epochs,batchsize,learningrate)
-            self.model.save(filename)
-
-    def TrainLoop(self,epochs=None,batchsize = None,learningrate = None):
-        self.model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
-        self.model.fit(self.X_train, self.y_train, epochs=10)
-
-    def Custom_TrainLoop(self,epochs=None,batchsize = None,learningrate = None):
 
         self.epochs = epochs if epochs else self.epochs
         self.batchsize = batchsize if batchsize else self.batchsize
         self.learningrate = learningrate if learningrate else self.learningrate
 
+
+        #Check if there is a file
+        filename = 'A\Models\PreTrainedModels\{}Model.keras'.format(self.name)
+        try:
+            self.model = tf.keras.models.load_model(filename)
+
+        except:
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            self.Custom_TrainLoop()
+            self.model.save(filename)
+
+    def TrainLoop(self):
+        optimizer=tf.keras.optimizers.Adam(learning_rate=self.learningrate)
+        loss  = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+
+        self.model.compile(optimizer=optimizer,loss=loss,metrics=['accuracy'])
+        self.model.fit(self.X_train, self.y_train,  
+                        epochs=self.epochs, 
+                        batch_size=self.batchsize,
+                        validation_data=(self.X_val, self.y_val))
+
+    def Custom_TrainLoop(self,):
 
         training_losses = []
         training_accuracies = []
@@ -115,24 +127,14 @@ class NN(ML_Template):
             for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
                 with tf.GradientTape() as tape:
                     logits = self.model(x_batch_train, training=True)
-                    loss_value = loss(y_batch_train,logits)
-                grads = tape.gradient(loss_value, self.model.trainable_weights)
+                    train_loss = loss(y_batch_train,logits)
+                grads = tape.gradient(train_loss, self.model.trainable_weights)
                 optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
 
                 train_acc_metric.update_state(y_batch_train, logits)
 
-            #Print Batches as it run through them
-            if step % 5 == 0:
-                print(
-                    "Training loss (for one batch) at step %d: %.4f"
-                    % (step, float(loss_value))
-                )
-                print("Seen so far: %s samples" % ((step + 1) * batchsize   ))
-
             # Display train metrics at the end of each epoch.
             train_acc = train_acc_metric.result()
-            print("Training acc over epoch: %.4f" % (float(train_acc),))
-
             # Reset training metrics
             train_acc_metric.reset_states()
 
@@ -140,11 +142,18 @@ class NN(ML_Template):
             for x_batch_val, y_batch_val in val_dataset:
                 val_logits = self.model(x_batch_val, training=False)
                 # Update val metrics
+                val_loss = loss(y_batch_val, val_logits)  # Compute validation loss
                 val_acc_metric.update_state(y_batch_val, val_logits)
             val_acc = val_acc_metric.result()
             val_acc_metric.reset_states()
-            print("Validation acc: %.4f" % (float(val_acc),))
-            print("Time taken: %.2fs" % (time.time() - start_time))
+
+            train_time = (time.time() - start_time)
+
+            print("Epoch {}/{} - {:.1f} - loss: {:.4f} - accuracy: {:.2f} - val_loss: {:.4f} - val_accuracy: {:.4f}".format(epoch,self.epochs,
+                                                                                                                            train_time,
+                                                                                                                            train_loss,train_acc,
+                                                                                                                            val_loss,val_acc))
+
 
     def Test(self):
         test_dataset = tf.data.Dataset.from_tensor_slices((self.X_test, self.y_test))
@@ -185,13 +194,69 @@ class Sequential_Models():
         model.add(layers.Dense(64, 
                                activation='relu'))
         
-        model.add(layers.Dense(10))
+        model.add(layers.Dense(2))
 
         return model
-    def Xception():
-        pass
-    def VGG():
-        pass
+    
+    def ManyLayers():
+        model = models.Sequential()
+        model.add(layers.Input(shape=(28, 28, 3)))
+
+        Filters = [32,64,128,128,64,64]
+        for current in Filters:
+            model.add(layers.Conv2D(current, (3, 3), 
+                                    activation='relu'))
+            model.add(layers.MaxPooling2D((2, 2)))
+
+        model.add(layers.Conv2D(32, (3, 3), 
+                                activation='relu'))
+
+        model.add(layers.Flatten())
+        
+        model.add(layers.Dense(16, 
+                               activation='relu'))
+        
+        model.add(layers.Dense(2))
+        return model
+
+    
+    def Alt():
+        model = models.Sequential()
+
+
+        Filters = [32,64,128,32,128,32,128,64]
+        for current in Filters:
+            model.add(layers.Conv2D(current, (3, 3), 
+                                    activation='relu'))
+            model.add(layers.MaxPooling2D((2, 2)))
+
+        model.add(layers.Flatten())
+        
+        model.add(layers.Dense(64, 
+                               activation='relu'))
+        
+        model.add(layers.Dense(1))
+        return model
+    
+    def Uber():
+        model = models.Sequential()
+
+
+        Filters = [32, 64, 128, 256,256,256, 128, 64]
+        for current in Filters:
+            model.add(layers.Conv2D(current, (3, 3), 
+                                    activation='relu'))
+            model.add(layers.MaxPooling2D((2, 2)))
+
+        model.add(layers.Flatten())
+        
+        model.add(layers.Dense(64, 
+                               activation='relu'))
+        
+        model.add(layers.Dense(1))
+        return model
+
+
     def ResNet():
         model = models.Sequential()
 
@@ -208,7 +273,7 @@ class Sequential_Models():
         model.add(layers.Flatten())
         model.add(layers.Dense(256, activation='relu'))
         model.add(layers.Dropout(0.5))
-        model.add(layers.Dense(10, activation='softmax'))
+        model.add(layers.Dense(2, activation='softmax'))
 
         return model
     
