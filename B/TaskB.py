@@ -58,11 +58,11 @@ class Task_B:
         self.y_train,self.y_val,self.y_test = Path_train_labels,Path_val_labels,Path_test_labels
 
         self.y_train,self.y_val,self.y_test = PreProcessing.one_hot_encode(Path_train_labels,Path_val_labels,Path_test_labels)
-        
+
         #print(self.y_train)
-        #self.X_test = PreProcessing(self.X_test,self.y_test).data_augmentation()
-        #self.X_val = PreProcessing(self.X_val,self.y_val).data_augmentation()
-        #self.X_train = PreProcessing(self.X_train,self.y_train).data_augmentation()
+        self.X_test = PreProcessing(self.X_test,self.y_test).data_augmentation()
+        self.X_val = PreProcessing(self.X_val,self.y_val).data_augmentation()
+        self.X_train = PreProcessing(self.X_train,self.y_train).data_augmentation()
 
 
         self.X_train = PreProcessing.normalisation(self.X_train)

@@ -54,35 +54,33 @@ class NN(ML_Template):
     #based off of the Keras Documentation
 
     def Train(self,epochs=None,batchsize = None,learningrate = None):
-            #Check if there is a file
-        filename = 'PreTrainedModels\{}Model.keras'.format(self.name)
-        #try:
-        #self.model = tf.keras.models.load_model(filename)
 
-        #except:
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-        self.TrainLoop(epochs,batchsize,learningrate)
-        self.model.save(filename)
-
-
-    def TrainLoop(self,epochs=None,batchsize = None,learningrate = None):
-        
         self.epochs = epochs if epochs else self.epochs
         self.batchsize = batchsize if batchsize else self.batchsize
         self.learningrate = learningrate if learningrate else self.learningrate
 
-        self.model.compile(optimizer='adam',
-              loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
-        self.model.fit(self.X_train, self.y_train, epochs=self.epochs, batch_size = self.batchsize)
+
+        #Check if there is a file
+        filename = 'PreTrainedModels\{}Model.keras'.format(self.name)
+        try:
+            self.model = tf.keras.models.load_model(filename)
+
+        except:
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            self.TrainLoop()
+            self.model.save(filename)
+
+    def TrainLoop(self):
+        optimizer=tf.keras.optimizers.Adam(learning_rate=self.learningrate)
+        loss  = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
+
+        self.model.compile(optimizer=optimizer,loss=loss,metrics=['accuracy'])
+        self.model.fit(self.X_train, self.y_train,  
+                        epochs=self.epochs, 
+                        batch_size=self.batchsize,
+                        validation_data=(self.X_val, self.y_val))
 
     def Custom_TrainLoop(self,epochs=None,batchsize = None,learningrate = None):
-
-        self.epochs = epochs if epochs else self.epochs
-        self.batchsize = batchsize if batchsize else self.batchsize
-        self.learningrate = learningrate if learningrate else self.learningrate
-
-
         training_losses = []
         training_accuracies = []
         validation_accuracies = []
@@ -90,16 +88,8 @@ class NN(ML_Template):
 
         #Defining optomisor and loss function
         optimizer = keras.optimizers.Adam(self.learningrate)
-        loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+        loss = keras.losses.CategoricalCrossentropy(from_logits=True)
 
-        
-        #self.model.compile(optimizer=optimizer,
-              #loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
-         #           metrics=['accuracy'])
-        
-        #history = self.model.fit(self.X_train, self.y_train, epochs=epochs, 
-                            #validation_data=(self.X_val, self.y_val), verbose=1)
-        
         #Converting Traning dataset to tensor
         train_dataset = tf.data.Dataset.from_tensor_slices((self.X_train, self.y_train))
         train_dataset = train_dataset.shuffle(buffer_size=1024).batch(self.batchsize)
@@ -109,8 +99,8 @@ class NN(ML_Template):
         val_dataset = val_dataset.batch(self.batchsize)
 
         #Defidning accuracy metrics
-        train_acc_metric = keras.metrics.SparseCategoricalAccuracy()
-        val_acc_metric = keras.metrics.SparseCategoricalAccuracy()
+        train_acc_metric = keras.metrics.CategoricalAccuracy()
+        val_acc_metric = keras.metrics.CategoricalAccuracy()
 
 
         #Main Training Loop
@@ -121,24 +111,14 @@ class NN(ML_Template):
             for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
                 with tf.GradientTape() as tape:
                     logits = self.model(x_batch_train, training=True)
-                    loss_value = loss(y_batch_train,logits)
-                grads = tape.gradient(loss_value, self.model.trainable_weights)
+                    train_loss = loss(y_batch_train,logits)
+                grads = tape.gradient(train_loss, self.model.trainable_weights)
                 optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
 
                 train_acc_metric.update_state(y_batch_train, logits)
 
-            #Print Batches as it run through them
-            if step % 5 == 0:
-                print(
-                    "Training loss (for one batch) at step %d: %.4f"
-                    % (step, float(loss_value))
-                )
-                print("Seen so far: %s samples" % ((step + 1) * batchsize   ))
-
             # Display train metrics at the end of each epoch.
             train_acc = train_acc_metric.result()
-            print("Training acc over epoch: %.4f" % (float(train_acc),))
-
             # Reset training metrics
             train_acc_metric.reset_states()
 
@@ -146,11 +126,17 @@ class NN(ML_Template):
             for x_batch_val, y_batch_val in val_dataset:
                 val_logits = self.model(x_batch_val, training=False)
                 # Update val metrics
+                val_loss = loss(y_batch_val, val_logits)  # Compute validation loss
                 val_acc_metric.update_state(y_batch_val, val_logits)
             val_acc = val_acc_metric.result()
             val_acc_metric.reset_states()
-            print("Validation acc: %.4f" % (float(val_acc),))
-            print("Time taken: %.2fs" % (time.time() - start_time))
+
+            train_time = (time.time() - start_time)
+
+            print("Epoch {}/{} - {:.1f} - loss: {:.4f} - accuracy: {:.2f} - val_loss: {:.4f} - val_accuracy: {:.4f}".format(epoch,self.epochs,
+                                                                                                                            train_time,
+                                                                                                                            train_loss,train_acc,
+                                                                                                                            val_loss,val_acc))
 
     def Test(self):
         test_dataset = tf.data.Dataset.from_tensor_slices((self.X_test, self.y_test))

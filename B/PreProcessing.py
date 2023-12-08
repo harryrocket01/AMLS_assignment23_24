@@ -97,7 +97,7 @@ class PreProcessing():
     
     def data_augmentation(self,Loops=1):
         Processed = np.empty([0, 28, 28, 3])
-        Labels = np.empty([0, 10])
+        Labels = np.empty([0, 9])
         for Loop in range(0,Loops):
             Flipped = PreProcessing(self.Dataset,self.Labels).Flip()
             Noise = PreProcessing(Flipped,self.Labels).Noise()
