@@ -6,12 +6,12 @@ from keras.utils import to_categorical
 
 class PreProcessing():
 
-    def __init__(self,Dataset=None,Lables=None) -> None:
+    def __init__(self,Dataset=None,Labels=None) -> None:
         self.Dataset = Dataset
-        self.Lables = Lables
+        self.Labels = Labels
 
         self.Augmented_data = []
-        self.augemented_lables = []
+        self.augemented_labels = []
 
         self.randomstate=42
         random.seed(self.randomstate)
@@ -97,14 +97,14 @@ class PreProcessing():
     
     def data_augmentation(self,Loops=1):
         Processed = np.empty([0, 28, 28, 3])
-        Labels = []
+        Labels = np.empty([0, 10])
         for Loop in range(0,Loops):
-            Flipped = PreProcessing(self.Dataset,self.Lables).Flip()
-            Noise = PreProcessing(Flipped,self.Lables).Noise()
-            Rotated = PreProcessing(Noise,self.Lables).Rotate()
+            Flipped = PreProcessing(self.Dataset,self.Labels).Flip()
+            Noise = PreProcessing(Flipped,self.Labels).Noise()
+            Rotated = PreProcessing(Noise,self.Labels).Rotate()
 
             Processed = np.concatenate((Processed, Rotated), axis=0)
-            Labels += self.Lables
+            Labels = np.concatenate((Labels, self.Labels), axis=0)
 
         to_return = np.array(Processed).reshape((len(Processed), 28, 28, 3))
 
@@ -116,9 +116,14 @@ class PreProcessing():
         return normalized_images
 
     def one_hot_encode(train,val,test):
-        one_hot_train = to_categorical(train, num_classes=10)
-        one_hot_val = to_categorical(val, num_classes=10) 
-        one_hot_test = to_categorical(test, num_classes=10) 
+        one_hot_train = to_categorical(train, num_classes=9)
+        one_hot_val = to_categorical(val, num_classes=9) 
+        one_hot_test = to_categorical(test, num_classes=9) 
+
+        # Ensure the labels are in the correct shape for sparse_categorical_crossentropy
+        one_hot_train = one_hot_train.reshape((-1, 9))
+        one_hot_val = one_hot_val.reshape((-1, 9))
+        one_hot_test = one_hot_test.reshape((-1, 9))
 
 
         return np.array(one_hot_train),np.array(one_hot_val),np.array(one_hot_test)
