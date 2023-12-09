@@ -71,41 +71,43 @@ class NN(ML_Template):
         filename = 'A\Models\PreTrainedModels\{}Model.keras'.format(self.name)
         try:
             self.model = tf.keras.models.load_model(filename)
-
+            return None
         except:
             os.makedirs(os.path.dirname(filename), exist_ok=True)
-            self.Custom_TrainLoop()
+            history = self.Custom_TrainLoop()
             self.model.save(filename)
 
-    def TrainLoop(self):
+            return history
+
+    def TrainLoop(self) -> dict:
+
+        history = {}
+
         optimizer=tf.keras.optimizers.Adam(learning_rate=self.learningrate)
         loss  = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
         self.model.compile(optimizer=optimizer,loss=loss,metrics=['accuracy'])
-        self.model.fit(self.X_train, self.y_train,  
-                        epochs=self.epochs, 
-                        batch_size=self.batchsize,
-                        validation_data=(self.X_val, self.y_val))
+        train_history = self.model.fit(self.X_train, self.y_train,  
+                                        epochs=self.epochs, 
+                                        batch_size=self.batchsize,
+                                        validation_data=(self.X_val, self.y_val))
+        
+        history["train_acc"] = train_history.history['loss']
+        history["train_loss"] = train_history.history['accuracy']
+        history["val_loss"] = train_history.history['val_loss']
+        history["val_acc"] = train_history.history['val_accuracy']
 
-    def Custom_TrainLoop(self,):
+        return history
 
-        training_losses = []
-        training_accuracies = []
-        validation_accuracies = []
+    def Custom_TrainLoop(self) -> dict:
+
+        history = {"train_acc":[],"train_loss":[],"val_loss":[],"val_acc":[],"train_time":[]}
 
 
         #Defining optomisor and loss function
         optimizer = keras.optimizers.Adam(self.learningrate)
         loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
-        
-        #self.model.compile(optimizer=optimizer,
-        #            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-         #           metrics=['accuracy'])
-        
-        #history = self.model.fit(self.X_train, self.y_train, epochs=epochs, 
-                            #validation_data=(self.X_val, self.y_val), verbose=1)
-        
         #Converting Traning dataset to tensor
         train_dataset = tf.data.Dataset.from_tensor_slices((self.X_train, self.y_train))
         train_dataset = train_dataset.shuffle(buffer_size=1024).batch(self.batchsize)
@@ -149,10 +151,20 @@ class NN(ML_Template):
 
             train_time = (time.time() - start_time)
 
-            print("Epoch {}/{} - {:.1f} - loss: {:.4f} - accuracy: {:.2f} - val_loss: {:.4f} - val_accuracy: {:.4f}".format(epoch,self.epochs,
-                                                                                                                            train_time,
-                                                                                                                            train_loss,train_acc,
-                                                                                                                            val_loss,val_acc))
+            history["train_acc"].append(train_acc)
+            history["train_loss"].append(train_loss)
+            history["val_loss"].append(val_loss)
+            history["val_acc"].append(val_acc)
+            history["train_time"].append(train_time)
+            to_print = "Epoch {}/{} - {:.1f} - loss: {:.4f} - accuracy: {:.2f} - val_loss: {:.4f} - val_accuracy: {:.4f}"
+            to_print.format(epoch,self.epochs,
+                            train_time,
+                            train_loss,train_acc,
+                            val_loss,val_acc)
+            
+            print(to_print)
+
+            return history
 
 
     def Test(self):
