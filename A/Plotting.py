@@ -54,7 +54,7 @@ class Plotting ():
         fig, ax = plt.subplots()
         counter = 1
 
-        if isinstance(y, np.ndarray) and y.ndim == 2:
+        if isinstance(y, np.ndarray) and y.ndim >= 2:
             for Y_current in y:
                 ax.plot(x, Y_current)
         else:

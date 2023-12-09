@@ -40,7 +40,7 @@ class NN(ML_Template):
         self.learningrate = 0.001
 
 
-    def SetModel(self,Model = "NN"):
+    def SetModel(self,Model = "NN") -> None:
         Model = Model.lower()
         if Model == "resnet":
             self.model = Sequential_Models.ResNet()
@@ -60,7 +60,7 @@ class NN(ML_Template):
 
     #based off of the Keras Documentation
 
-    def Train(self,epochs=None,batchsize = None,learningrate = None):
+    def Train(self,epochs=None,batchsize = None,learningrate = None) -> dict:
 
         self.epochs = epochs if epochs else self.epochs
         self.batchsize = batchsize if batchsize else self.batchsize
@@ -83,8 +83,8 @@ class NN(ML_Template):
 
         history = {}
 
-        optimizer=tf.keras.optimizers.Adam(learning_rate=self.learningrate)
-        loss  = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=self.learningrate)
+        loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
         self.model.compile(optimizer=optimizer,loss=loss,metrics=['accuracy'])
         train_history = self.model.fit(self.X_train, self.y_train,  
@@ -157,32 +157,45 @@ class NN(ML_Template):
             history["val_acc"].append(val_acc)
             history["train_time"].append(train_time)
             to_print = "Epoch {}/{} - {:.1f} - loss: {:.4f} - accuracy: {:.2f} - val_loss: {:.4f} - val_accuracy: {:.4f}"
-            to_print.format(epoch,self.epochs,
-                            train_time,
-                            train_loss,train_acc,
-                            val_loss,val_acc)
+            to_print = to_print.format(epoch,self.epochs,
+                                    train_time,
+                                    train_loss,train_acc,
+                                    val_loss,val_acc)
             
             print(to_print)
 
-            return history
+        return history
 
 
-    def Test(self):
+    def Test(self) -> (int, ArrayLike):
         test_dataset = tf.data.Dataset.from_tensor_slices((self.X_test, self.y_test))
-        test_dataset = test_dataset.batch(self.batchsize)  # Use the same batch size as in training
+        test_dataset = test_dataset.batch(self.batchsize) 
 
         test_acc_metric = keras.metrics.SparseCategoricalAccuracy()
+        y_pred = []
 
         # Loop over the test set
         for x_batch_test, y_batch_test in test_dataset:
-            test_logits = self.model(x_batch_test, training=False)  # Set training=False for testing
+            test_logits = self.model(x_batch_test, training=False)
             test_acc_metric.update_state(y_batch_test, test_logits)
+
+            batch_pred = np.argmax(test_logits, axis=1)
+        
+
+            y_pred.extend(batch_pred)
 
         test_acc = test_acc_metric.result()
         print("Test accuracy: %.4f" % (float(test_acc),))
 
-        # Reset the test accuracy metric
+        #Reset the test accuracy metric
         test_acc_metric.reset_states()
+
+
+        y_pred_np= np.array(y_pred)
+
+        return test_acc, y_pred_np
+    
+    
 
 class Sequential_Models():
 

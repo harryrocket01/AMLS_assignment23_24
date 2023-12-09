@@ -13,6 +13,7 @@ from Models.SVM import SVM, SVM_HOG
 from Models.RandomForest import RandomForest, ADABoost
 from Models.NN import NN
 from PreProcessing import PreProcessing
+import matplotlib.pyplot as plt
 
 class Task_A:
     
@@ -103,9 +104,15 @@ class Task_A:
         model = ""
 
 
-        Model.SetModel("Alt")
-        Model.Train(epochs=100,batchsize = 32,learningrate = 0.001)
-        Model.Test()
+        Model.SetModel()
+        history = Model.Train(epochs=100,batchsize = 32,learningrate = 0.001)
+
+        print(history)
+
+        if history:
+            fig, ax = Plotting.Line_Plot(x = np.linspace(1, len(history["train_acc"])), y =history["train_acc"], title ="", x_label ="", y_label ="", legend = ["",""])
+            plt.show()
+        accuracy, result = Model.Test()
 
 
 
