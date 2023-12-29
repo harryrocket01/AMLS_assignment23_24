@@ -39,7 +39,7 @@ class RandomForest(ML_Template):
 
 
         random_f = RandomForestClassifier(n_estimators=self.n_estimators, random_state=self.random_state)
-
+        
         self.Model = random_f
 
 

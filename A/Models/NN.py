@@ -40,27 +40,30 @@ class NN(ML_Template):
         self.learningrate = 0.001
 
 
-    def SetModel(self,Model = "NN") -> None:
-        Model = Model.lower()
-        if Model == "resnet":
-            self.model = Sequential_Models.ResNet()
-        elif Model =="ManyLayers":
-            self.model = Sequential_Models.ManyLayers()
-        elif Model =="Alt":
-            self.model = Sequential_Models.Alt()
-        elif Model =="":
+    def SetModel(self,model = "NN",verbose: int = 1,dropout_rate: float = 0.5, layer: ArrayLike = [32,64,64]) -> None:
+        model = model.lower()
+        if model == "resnet":
+            self.model = Sequential_Models.ResNet(dropout_rate = dropout_rate)
+        elif model =="ManyLayers":
+            self.model = Sequential_Models.CNN(dropout_rate=dropout_rate, layer=[32, 64, 128, 256,256,256, 128, 64])
+        elif model =="Alt":
+            self.model = Sequential_Models.CNN(dropout_rate=dropout_rate, layer= [32,64,128,32,128,32,128,64])
+        elif model =="":
             pass
         else:
-            self.model = Sequential_Models.Default()
+            self.model = Sequential_Models.CNN(dropout_rate=dropout_rate, layer=layer)
         
-        print(self.model.summary())
-        self.name = Model
+        self.name = model
+
+        if verbose:
+            print(self.model.summary())
+
 
 
 
     #based off of the Keras Documentation
 
-    def Train(self,epochs=None,batchsize = None,learningrate = None) -> dict:
+    def Train(self,epochs=None,batchsize = None,learningrate = None,verbose: int = 1) -> dict:
 
         self.epochs = epochs if epochs else self.epochs
         self.batchsize = batchsize if batchsize else self.batchsize
@@ -71,42 +74,61 @@ class NN(ML_Template):
         filename = 'A\Models\PreTrainedModels\{}Model.keras'.format(self.name)
         try:
             self.model = tf.keras.models.load_model(filename)
+            
+            if verbose:
+                print("\nPre Trained Model Loaded - {}Model.keras".format(self.name))
             return None
         except:
+            if verbose:
+                print("No Pre Trained Model, Training Model - {}Model.keras\n".format(self.name))
             os.makedirs(os.path.dirname(filename), exist_ok=True)
             history = self.Custom_TrainLoop()
             self.model.save(filename)
-
             return history
 
-    def TrainLoop(self) -> dict:
+    def train_one_off(self,epochs=None,batchsize = None,learningrate = None,verbose: int = 0):
+        
+        self.epochs = epochs if epochs else self.epochs
+        self.batchsize = batchsize if batchsize else self.batchsize
+        self.learningrate = learningrate if learningrate else self.learningrate
+        history = self.TrainLoop(verbose=verbose)
+
+        return history["train_acc"][-1], history["train_loss"][-1], history["val_acc"][-1], history["val_loss"][-1]
+
+
+
+    def TrainLoop(self,verbose: int = 1) -> dict:
 
         history = {}
 
         optimizer = tf.keras.optimizers.Adam(learning_rate=self.learningrate)
-        loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        loss = tf.keras.losses.BinaryCrossentropy()
 
         self.model.compile(optimizer=optimizer,loss=loss,metrics=['accuracy'])
         train_history = self.model.fit(self.X_train, self.y_train,  
                                         epochs=self.epochs, 
                                         batch_size=self.batchsize,
-                                        validation_data=(self.X_val, self.y_val))
+                                        validation_data=(self.X_val, self.y_val),
+                                        verbose = verbose)
         
-        history["train_acc"] = train_history.history['loss']
-        history["train_loss"] = train_history.history['accuracy']
+        history["train_acc"] = train_history.history['accuracy']
+        history["train_loss"] = train_history.history['loss']
         history["val_loss"] = train_history.history['val_loss']
         history["val_acc"] = train_history.history['val_accuracy']
 
         return history
 
-    def Custom_TrainLoop(self) -> dict:
+    def Custom_TrainLoop(self,verbose: int = 1) -> dict:
 
         history = {"train_acc":[],"train_loss":[],"val_loss":[],"val_acc":[],"train_time":[]}
 
 
         #Defining optomisor and loss function
         optimizer = keras.optimizers.Adam(self.learningrate)
-        loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+
+
+        
+        loss = tf.keras.losses.BinaryCrossentropy()
 
         #Converting Traning dataset to tensor
         train_dataset = tf.data.Dataset.from_tensor_slices((self.X_train, self.y_train))
@@ -117,8 +139,8 @@ class NN(ML_Template):
         val_dataset = val_dataset.batch(self.batchsize)
 
         #Defidning accuracy metrics
-        train_acc_metric = keras.metrics.SparseCategoricalAccuracy()
-        val_acc_metric = keras.metrics.SparseCategoricalAccuracy()
+        train_acc_metric = keras.metrics.BinaryAccuracy() 
+        val_acc_metric = keras.metrics.BinaryAccuracy()
 
 
         #Main Training Loop
@@ -151,138 +173,83 @@ class NN(ML_Template):
 
             train_time = (time.time() - start_time)
 
-            history["train_acc"].append(train_acc)
-            history["train_loss"].append(train_loss)
-            history["val_loss"].append(val_loss)
-            history["val_acc"].append(val_acc)
+            history["train_acc"].append(train_acc.numpy())
+            history["train_loss"].append(train_loss.numpy())
+            history["val_loss"].append(val_loss.numpy())
+            history["val_acc"].append(val_acc.numpy())
             history["train_time"].append(train_time)
-            to_print = "Epoch {}/{} - {:.1f} - loss: {:.4f} - accuracy: {:.2f} - val_loss: {:.4f} - val_accuracy: {:.4f}"
-            to_print = to_print.format(epoch,self.epochs,
-                                    train_time,
-                                    train_loss,train_acc,
-                                    val_loss,val_acc)
             
-            print(to_print)
+            
+            if verbose:
+                to_print = "Epoch {}/{} - {:.1f} - loss: {:.4f} - accuracy: {:.2f} - val_loss: {:.4f} - val_accuracy: {:.4f}"
+                to_print = to_print.format(epoch+1,self.epochs,
+                                        train_time,
+                                        train_loss,train_acc,
+                                        val_loss,val_acc)
+                print(to_print)
 
         return history
 
 
-    def Test(self) -> (int, ArrayLike):
+    def Test(self, verbose: int = 1) -> (int, ArrayLike):
         test_dataset = tf.data.Dataset.from_tensor_slices((self.X_test, self.y_test))
         test_dataset = test_dataset.batch(self.batchsize) 
 
-        test_acc_metric = keras.metrics.SparseCategoricalAccuracy()
+        test_acc_metric = tf.keras.metrics.BinaryAccuracy(threshold=0.5) 
         y_pred = []
 
-        # Loop over the test set
+        #Loop over the test set
         for x_batch_test, y_batch_test in test_dataset:
             test_logits = self.model(x_batch_test, training=False)
+            batch_pred = (test_logits >= 0.5).numpy().astype(int)
             test_acc_metric.update_state(y_batch_test, test_logits)
-
-            batch_pred = np.argmax(test_logits, axis=1)
-        
-
             y_pred.extend(batch_pred)
+            #y_pred.extend(batch_pred)
 
         test_acc = test_acc_metric.result()
-        print("Test accuracy: %.4f" % (float(test_acc),))
+        if verbose:
+            print("Test accuracy: %.4f" % (float(test_acc)))
 
         #Reset the test accuracy metric
         test_acc_metric.reset_states()
 
+        y_pred_np = np.array(y_pred).flatten()
 
-        y_pred_np= np.array(y_pred)
 
-        return test_acc, y_pred_np
+        return test_acc.numpy(), y_pred_np
     
     
 
 class Sequential_Models():
 
-    def Default():
+
+    def CNN(dropout_rate: float = 0.5,layer : ArrayLike = [32,64,64]):
         model = models.Sequential()
-        model.add(layers.Conv2D(32, (3, 3), 
-                                activation='relu', 
-                                input_shape=((28, 28, 1))))
-        
-        model.add(layers.MaxPooling2D((2, 2)))
 
-        model.add(layers.Conv2D(64, (3, 3), 
-                                activation='relu'))
-        model.add(layers.MaxPooling2D((2, 2)))
+        model.add(layers.Input(shape=(28, 28, 1)))
 
-        model.add(layers.Conv2D(64, (3, 3), 
-                                activation='relu'))
+        for current in layer:
+            model.add(layers.Conv2D(current, (3, 3), 
+                                    activation='relu',
+                                    padding='same'))
+            model.add(layers.MaxPooling2D((2, 2)))
+            model.add(layers.Dropout(dropout_rate))
+
 
         model.add(layers.Flatten())
         
         model.add(layers.Dense(64, 
                                activation='relu'))
         
-        model.add(layers.Dense(2))
+        model.add(layers.Dropout(dropout_rate))
+
+        model.add(layers.Dense(1, activation='sigmoid'))
 
         return model
-    
-    def ManyLayers():
-        model = models.Sequential()
-        model.add(layers.Input(shape=(28, 28, 3)))
-
-        Filters = [32,64,128,128,64,64]
-        for current in Filters:
-            model.add(layers.Conv2D(current, (3, 3), 
-                                    activation='relu'))
-            model.add(layers.MaxPooling2D((2, 2)))
-
-        model.add(layers.Conv2D(32, (3, 3), 
-                                activation='relu'))
-
-        model.add(layers.Flatten())
-        
-        model.add(layers.Dense(16, 
-                               activation='relu'))
-        
-        model.add(layers.Dense(2))
-        return model
-
-    
-    def Alt():
-        model = models.Sequential()
 
 
-        Filters = [32,64,128,32,128,32,128,64]
-        for current in Filters:
-            model.add(layers.Conv2D(current, (3, 3), 
-                                    activation='relu'))
-            model.add(layers.MaxPooling2D((2, 2)))
 
-        model.add(layers.Flatten())
-        
-        model.add(layers.Dense(64, 
-                               activation='relu'))
-        
-        model.add(layers.Dense(1))
-        return model
-    
-    def Uber():
-        model = models.Sequential()
-
-
-        Filters = [32, 64, 128, 256,256,256, 128, 64]
-        for current in Filters:
-            model.add(layers.Conv2D(current, (3, 3), 
-                                    activation='relu'))
-            model.add(layers.MaxPooling2D((2, 2)))
-
-        model.add(layers.Flatten())
-        
-        model.add(layers.Dense(64, 
-                               activation='relu'))
-        
-        model.add(layers.Dense(1))
-        return model
-
-
-    def ResNet():
+    def ResNet(dropout_rate: float = 0.5):
         model = models.Sequential()
 
         model.add(layers.Input(shape=(28, 28, 1)))
@@ -297,8 +264,8 @@ class Sequential_Models():
         # Additional custom layers
         model.add(layers.Flatten())
         model.add(layers.Dense(256, activation='relu'))
-        model.add(layers.Dropout(0.5))
-        model.add(layers.Dense(2, activation='softmax'))
+        model.add(layers.Dropout(dropout_rate))
+        model.add(layers.Dense(1, activation='sigmoid'))
 
         return model
     

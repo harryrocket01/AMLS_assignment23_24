@@ -6,12 +6,12 @@ from scipy.ndimage import rotate
 
 class PreProcessing():
 
-    def __init__(self,Dataset=None,Lables=None) -> None:
+    def __init__(self,Dataset=None,Labels=None) -> None:
         self.Dataset = Dataset
-        self.Lables = Lables
+        self.Labels = Labels
 
         self.Augmented_data = []
-        self.augemented_lables = []
+        self.augemented_Labels = []
 
         self.randomstate=42
         random.seed(self.randomstate)
@@ -46,7 +46,7 @@ class PreProcessing():
 
 
     def Flip(self):
-        Flipped = []
+        flipped = []
         for Image in self.Dataset:
             type = random.randint(0, 2)
 
@@ -60,28 +60,32 @@ class PreProcessing():
                 flipped_image = np.flip(Image,axis=0)
                 flipped_image = np.flip(flipped_image,axis=1)
 
-            Flipped.append(flipped_image )
+            flipped.append(flipped_image )
 
-        to_return = Flipped#np.array(Flipped)
+        to_return = flipped#np.array(Flipped)
         return to_return
     
     def New_Data(self,Loops=1):
-        Processed = []
-        Labels = []
+        Processed = np.empty([0, 28, 28, 1])
+        Labels = np.empty([0, 1])
+
         for Loop in range(0,Loops):
-            Flipped = PreProcessing(self.Dataset,self.Lables).Flip()
-            Noise = PreProcessing(Flipped,self.Lables).Noise()
-            Rotated = PreProcessing(Noise,self.Lables).Rotate()
+            Flipped = PreProcessing(self.Dataset,self.Labels).Flip()
+            Noise = PreProcessing(Flipped,self.Labels).Noise()
+            Rotated = PreProcessing(Noise,self.Labels).Rotate()
 
-            Processed = Processed+Rotated
-            Labels += self.Lables
-
-        to_return = np.array(Processed).reshape((len(Processed), 28, 28, 1))
-
-        return to_return#, Labels
+            Rotated = np.array(Rotated).reshape((len(Rotated), 28, 28, 1))
+            Processed = np.concatenate((Processed, Rotated), axis=0)
+            Labels = np.concatenate((Labels, self.Labels), axis=0)
+        return Processed, Labels
 
     def Normalisation(Dataset):
 
         normalized_images = Dataset.astype('float32') / 255.0
 
+        mean = np.mean(normalized_images, axis=(0, 1, 2))
+        std = np.std(normalized_images, axis=(0, 1, 2))
+
+        normalized_images = (normalized_images - mean) / std
+        
         return normalized_images
