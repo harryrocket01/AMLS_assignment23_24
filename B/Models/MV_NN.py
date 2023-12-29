@@ -207,7 +207,7 @@ class Sequential_Models():
         model.add(layers.Flatten())
         model.add(layers.Dense(256, activation='relu'))
         model.add(layers.Dropout(0.5))
-        model.add(layers.Dense(10, activation='softmax'))
+        model.add(layers.Dense(9, activation='softmax'))
 
         return model
     
