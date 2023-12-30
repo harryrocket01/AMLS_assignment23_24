@@ -1,19 +1,20 @@
+"""
+AMLS 1 Final Assessment - TaskA.py
+Binary and Multivariate Classification
+Author - Harry Softley-Graham
+Written - Nov 2023 - Jan 2024
+"""
 
 
-
-
-
-#import subprocess
-#import sys
-#subprocess.check_call([sys.executable, "-m", "pip", "install", "tensorflow"])
+#Custom Function Imports
 from PreProcessing import PreProcessing
 from Plotting import Plotting
+from Models.MV_NN import MV_CNN
 
+#Python Package Imports
 import os 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
-
 import numpy as np
-from Models.MV_NN import NN
 import matplotlib.pyplot as plt
 
 class Task_B:
@@ -58,12 +59,6 @@ class Task_B:
         fig, axs = Plotting().Data_Represenation(self.X_train, Path_train_labels,"Examples of Classes in PathMNIST")
         fig.savefig('./B/Graphics/UnProcessed_B_Data.pdf')
 
-        #print(self.y_train)
-        #self.X_test = PreProcessing(self.X_test,self.y_test).data_augmentation()
-        #self.X_val = PreProcessing(self.X_val,self.y_val).data_augmentation()
-        #self.X_train = PreProcessing(self.X_train,self.y_train).data_augmentation()
-
-
         self.X_train = PreProcessing.normalisation(self.X_train)
         self.X_val = PreProcessing.normalisation(self.X_val)
         self.X_test = PreProcessing.normalisation(self.X_test)
@@ -78,12 +73,39 @@ class Task_B:
         pass
 
 
-    def RunNN(self):
-        Model = NN(self.X_train,self.y_train,self.X_val,self.y_val,self.X_test,self.y_test)
+    def RunNN(self, model_name: str = "deep"):
+        image_directory = "./B/Graphics/CNN/"
+
+        epochs = 3
+        learning_rate = 0.001
+        batch_size = 32
+
+        Model = MV_CNN(self.X_train,self.y_train,self.X_val,self.y_val,self.X_test,self.y_test)
         print(Model.X_test.shape)
-        Model.SetModel()
-        Model.Train()
-        Model.Test()
+        Model.SetModel(Model = model_name)
+        Model.SetHyperPerameters(epochs=epochs, learning_rate=learning_rate, batch_size=batch_size)
+
+        history = Model.Train()
+        print(history)
+        if history:
+            x_scale =  np.linspace(1, len(history["train_acc"]),num=len(history["train_acc"]), endpoint=True)
+            fig, axs = Plotting().Line_Plot(x = x_scale, y = [history["train_acc"],history["val_acc"]],
+                                            title ="Epochs Vs Accuracy for task A Final Model",
+                                            x_label ="No. of Epochs", 
+                                            y_label ="Accuracy", 
+                                            legend = ["Train Accuracy","Validation Accuracy"])
+            plt.show()
+            axs.figure.savefig(image_directory+model_name+"_Accuracy_plot.pdf")
+        
+        print("\nRESULTS\n")
+        
+        accuracy, result = Model.Test()
+
+        true_labels = np.argmax(self.y_test,  axis=1)
+
+        fig, axs = Plotting().Confusion_Matrix(true_labels = true_labels, pred_labels=result,
+                                                title= "Confusion Matrix of "+model_name+" of test set")
+        axs.figure.savefig(image_directory+model_name+"_Confusion_Matrix.pdf")
 
 
 

@@ -1,17 +1,20 @@
+"""
+AMLS 1 Final Assessment - MV_NN.py
+Binary and Multivariate Classification
+Author - Harry Softley-Graham
+Written - Nov 2023 - Jan 2024
+"""
+
+#Custom Function Imports
+from Models.Template import ML_Template
+
+#Python Package Imports
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
 import numpy as np
 from numpy.typing import ArrayLike
-
 import pandas as pd
-
-from sklearn.svm import SVC
-
 import matplotlib.pyplot as plt
-
-from sklearn.metrics import confusion_matrix
-
 import time
 
 from sklearn.preprocessing import StandardScaler
@@ -19,13 +22,11 @@ from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
 import keras
 from keras import layers
-
 from tensorflow.keras import datasets, layers, models,optimizers
 from tensorflow.keras.applications import ResNet50
 
-from Models.Template import ML_Template
 
-class NN(ML_Template):
+class MV_CNN(ML_Template):
 
     def __init__(self,X_train,y_train,X_val,y_val,X_test,y_test):
         super().__init__(X_train,y_train,X_val,y_val,X_test,y_test)
@@ -35,14 +36,18 @@ class NN(ML_Template):
         self.history = None
 
         self.epochs = 5
-        self.batchsize = 32
-        self.learningrate = 0.001
+        self.batch_size = 32
+        self.learning_rate = 0.001
 
 
     def SetModel(self,Model = "NN"):
         Model = Model.lower()
         if Model == "resnet":
-            self.model = Sequential_Models.ResNet()
+            self.model = Sequential_Models.ResNet_test()
+        elif Model == "taska":
+            self.model = Sequential_Models.CNN_A()
+        elif Model == "deep":
+            self.model = Sequential_Models.Deep()
         else:
             self.model = Sequential_Models.Default()
             print(self.model.summary())
@@ -53,15 +58,11 @@ class NN(ML_Template):
 
     #based off of the Keras Documentation
 
-    def Train(self,epochs=None,batchsize = None,learningrate = None):
-
-        self.epochs = epochs if epochs else self.epochs
-        self.batchsize = batchsize if batchsize else self.batchsize
-        self.learningrate = learningrate if learningrate else self.learningrate
-
+    def Train(self):
 
         #Check if there is a file
-        filename = 'PreTrainedModels\{}Model.keras'.format(self.name)
+        filename = 'B\Models\PreTrainedModels\{}Model.keras'.format(self.name)
+
         try:
             self.model = tf.keras.models.load_model(filename)
 
@@ -70,33 +71,48 @@ class NN(ML_Template):
             self.TrainLoop()
             self.model.save(filename)
 
-    def TrainLoop(self):
-        optimizer=tf.keras.optimizers.Adam(learning_rate=self.learningrate)
+    def SetHyperPerameters(self, epochs:int =None,batch_size: int = None,learning_rate: float = None):
+        self.epochs = epochs if epochs else self.epochs
+        self.batch_size = batch_size if batch_size else self.batch_size
+        self.learning_rate = learning_rate if learning_rate else self.learning_rate
+
+    def TrainLoop(self, verbose: str = 1):
+
+        history = {}
+
+        optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
         loss  = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
 
         self.model.compile(optimizer=optimizer,loss=loss,metrics=['accuracy'])
-        self.model.fit(self.X_train, self.y_train,  
-                        epochs=self.epochs, 
-                        batch_size=self.batchsize,
-                        validation_data=(self.X_val, self.y_val))
+        train_history = self.model.fit(self.X_train, self.y_train,  
+                                        epochs=self.epochs, 
+                                        batch_size=self.batch_size,
+                                        validation_data=(self.X_val, self.y_val),
+                                        verbose = verbose)
+        
+        history["train_acc"] = train_history.history['accuracy']
+        history["train_loss"] = train_history.history['loss']
+        history["val_loss"] = train_history.history['val_loss']
+        history["val_acc"] = train_history.history['val_accuracy']
 
-    def Custom_TrainLoop(self,epochs=None,batchsize = None,learningrate = None):
-        training_losses = []
-        training_accuracies = []
-        validation_accuracies = []
+        return history
+
+    def Custom_TrainLoop(self,verbose: int = 1):
+
+        history = {"train_acc":[],"train_loss":[],"val_loss":[],"val_acc":[],"train_time":[]}
 
 
         #Defining optomisor and loss function
-        optimizer = keras.optimizers.Adam(self.learningrate)
+        optimizer = keras.optimizers.Adam(self.learning_rate)
         loss = keras.losses.CategoricalCrossentropy(from_logits=True)
 
         #Converting Traning dataset to tensor
         train_dataset = tf.data.Dataset.from_tensor_slices((self.X_train, self.y_train))
-        train_dataset = train_dataset.shuffle(buffer_size=1024).batch(self.batchsize)
+        train_dataset = train_dataset.shuffle(buffer_size=1024).batch(self.batch_size)
 
         #Converting Validation dataset to tensor.
         val_dataset = tf.data.Dataset.from_tensor_slices((self.X_val, self.y_val))
-        val_dataset = val_dataset.batch(self.batchsize)
+        val_dataset = val_dataset.batch(self.batch_size)
 
         #Defidning accuracy metrics
         train_acc_metric = keras.metrics.CategoricalAccuracy()
@@ -133,27 +149,53 @@ class NN(ML_Template):
 
             train_time = (time.time() - start_time)
 
-            print("Epoch {}/{} - {:.1f} - loss: {:.4f} - accuracy: {:.2f} - val_loss: {:.4f} - val_accuracy: {:.4f}".format(epoch,self.epochs,
-                                                                                                                            train_time,
-                                                                                                                            train_loss,train_acc,
-                                                                                                                            val_loss,val_acc))
+           
+            history["train_acc"].append(train_acc.numpy())
+            history["train_loss"].append(train_loss.numpy())
+            history["val_loss"].append(val_loss.numpy())
+            history["val_acc"].append(val_acc.numpy())
+            history["train_time"].append(train_time)
+            
+            
+            if verbose:
+                to_print = "Epoch {}/{} - {:.1f} - loss: {:.4f} - accuracy: {:.2f} - val_loss: {:.4f} - val_accuracy: {:.4f}"
+                to_print = to_print.format(epoch+1,self.epochs,
+                                        train_time,
+                                        train_loss,train_acc,
+                                        val_loss,val_acc)
+                print(to_print)
 
-    def Test(self):
+        return history                                                                                        
+    
+    def Test(self, verbose: int = 1) -> (int, ArrayLike):
+
         test_dataset = tf.data.Dataset.from_tensor_slices((self.X_test, self.y_test))
-        test_dataset = test_dataset.batch(self.batchsize)  # Use the same batch size as in training#
+        test_dataset = test_dataset.batch(self.batch_size) 
 
-        test_acc_metric = keras.metrics.CategoricalAccuracy()#
+        test_acc_metric = tf.keras.metrics.CategoricalAccuracy() 
+        y_pred = []
 
+        #Loop over the test set
         for x_batch_test, y_batch_test in test_dataset:
-            test_logits = self.model(x_batch_test, training=False)  # Set training=False for testing
+            test_logits = self.model(x_batch_test, training=False)
+            batch_pred = (test_logits >= 0.5).numpy().astype(int)
             test_acc_metric.update_state(y_batch_test, test_logits)
+            y_pred.extend(batch_pred)
+            #y_pred.extend(batch_pred)
 
         test_acc = test_acc_metric.result()
-        print("Test accuracy: %.4f" % (float(test_acc),))
+        if verbose:
+            print("Test accuracy: {:.4f}".format(float(test_acc)))
 
+        #Reset the test accuracy metric
         test_acc_metric.reset_states()
 
-        pass
+        y_pred_np = np.array(y_pred)
+
+        #convert back from one hot encoded
+        y_pred_np = np.argmax(y_pred_np,  axis=1)
+
+        return float(test_acc), y_pred_np
 
 
 
@@ -187,10 +229,97 @@ class Sequential_Models():
 
         return model
     
-    def Xception():
-        pass
-    def VGG():
-        pass
+    def CNN_A(dropout_rate: float = 0.25):
+            model = models.Sequential()
+
+            model.add(layers.Input(shape=(28, 28, 3)))
+
+
+                
+            model.add(layers.Conv2D(32, (3, 3), 
+                                        activation='relu',
+                                        padding='same',
+                                        strides=1))
+            model.add(layers.Conv2D(32, (3, 3), 
+                                        activation='relu'))
+            
+            model.add(layers.MaxPooling2D((2, 2)))
+
+            model.add(layers.Dropout(dropout_rate))
+
+            model.add(layers.Conv2D(64, (3, 3), 
+                                        activation='relu',
+                                        padding='same',
+                                        strides=1))
+            model.add(layers.Conv2D(64, (3, 3), 
+                                        activation='relu'))
+
+            model.add(layers.MaxPooling2D((2, 2)))
+
+            model.add(layers.Flatten())
+            
+            model.add(layers.Dropout(0.5))
+
+            model.add(layers.Dense(64, 
+                                activation='relu'))
+            
+            model.add(layers.Dense(9))
+
+            return model
+
+        
+    def Deep(dropout_rate: float = 0.25):
+            model = models.Sequential()
+
+            model.add(layers.Input(shape=(28, 28, 3)))
+
+
+            model.add(layers.Conv2D(32, (3, 3), 
+                                        activation='relu',
+                                        padding='same',
+                                        strides=1))
+            model.add(layers.Conv2D(32, (3, 3), 
+                                        activation='relu',
+                                        padding='same',
+                                        strides=1))
+            model.add(layers.MaxPooling2D((2, 2)))
+
+            model.add(layers.Conv2D(32, (3, 3), 
+                                        activation='relu',
+                                        padding='same',
+                                        strides=1))
+            model.add(layers.Conv2D(32, (3, 3), 
+                                        activation='relu',
+                                        padding='same',
+                                        strides=1))
+            model.add(layers.MaxPooling2D((2, 2)))
+
+            model.add(layers.Conv2D(32, (3, 3), 
+                                        activation='relu',
+                                        padding='same',
+                                        strides=1))
+            model.add(layers.Conv2D(32, (3, 3), 
+                                        activation='relu',
+                                        padding='same',
+                                        strides=1))
+            model.add(layers.MaxPooling2D((2, 2)))
+
+            model.add(layers.Conv2D(32, (3, 3), 
+                                        activation='relu',
+                                        padding='same',
+                                        strides=1))
+
+            model.add(layers.GlobalAveragePooling2D())
+            
+            model.add(layers.Dropout(0.5))
+
+            model.add(layers.Dense(64, 
+                                activation='relu'))
+            
+            model.add(layers.Dense(9))
+
+            return model
+
     def ResNet():
         model = models.Sequential()
 
@@ -210,6 +339,42 @@ class Sequential_Models():
         model.add(layers.Dense(9, activation='softmax'))
 
         return model
-    
-    def MobileNet():
-        pass
+
+    def ResNet_test(dropout_rate: int = 0.5):
+        inputs = keras.Input(shape=(28, 28, 3))
+        main_path = layers.Conv2D(32, (3, 3), 
+                                  activation="relu")(inputs)
+        main_path = layers.Conv2D(64, (3, 3), 
+                                  activation="relu")(main_path)
+
+        output_1 = layers.MaxPooling2D((2,2))(main_path)
+
+        main_path = layers.Conv2D(64, 3, activation="relu", 
+                                  padding="same")(output_1)
+        main_path = layers.Conv2D(64, 3, activation="relu", 
+                                  padding="same")(main_path)
+        output_2 = layers.add([main_path, output_1])
+
+        main_path = layers.Conv2D(64, 3, activation="relu", 
+                                  padding="same")(output_2)
+        main_path = layers.Conv2D(64, 3, activation="relu", 
+                                  padding="same")(main_path)
+        block_3_output = layers.add([main_path, output_2])
+       
+        main_path = layers.Conv2D(64, (3, 3), 
+                                  activation="relu")(block_3_output)
+
+        main_path = layers.MaxPooling2D((2,2))(main_path)
+
+        main_path = layers.GlobalAveragePooling2D()(main_path)
+        main_path = layers.Dense(128, 
+                                 activation="relu")(main_path)
+        main_path = layers.Dropout(dropout_rate)(main_path)
+        outputs = layers.Dense(9)(main_path)
+
+        model = keras.Model(inputs, outputs, name="Residual_Network")
+
+        model.summary()
+        return model
+
+        model.summary()
