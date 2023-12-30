@@ -73,7 +73,7 @@ class Plotting ():
 
         return fig, axs
 
-    def Line_Plot(self,x: ArrayLike, y:ArrayLike, title: str, x_label: str, y_label: str, legend) -> (plt.Figure, plt.Axes):
+    def Line_Plot(self,x: ArrayLike, y:ArrayLike, title: str ="", x_label: str ="", y_label: str ="", legend: ArrayLike = []) -> (plt.Figure, plt.Axes):
         fig, axs = plt.subplots()
         counter = 1
 
@@ -113,6 +113,8 @@ class Plotting ():
         
         fig.set_size_inches(3.5, 2)
         fig.set_tight_layout(True)
+
+        plt.show()
 
 
 

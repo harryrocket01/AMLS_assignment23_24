@@ -66,9 +66,8 @@ class PreProcessing():
         return to_return
     
     def New_Data(self,Loops=1):
-        Processed = np.empty([0, 28, 28, 1])
-        Labels = np.empty([0, 1])
-
+        Processed = self.Dataset.copy()
+        Labels = self.Labels.copy()
         for Loop in range(0,Loops):
             Flipped = PreProcessing(self.Dataset,self.Labels).Flip()
             Noise = PreProcessing(Flipped,self.Labels).Noise()

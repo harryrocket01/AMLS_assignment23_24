@@ -16,7 +16,7 @@ from skimage.feature import hog
 from scipy import ndimage
 
 from sklearn.metrics import classification_report,accuracy_score
-
+import matplotlib.pyplot as plt
 
 #Import ML Template
 from Models.Template import ML_Template
@@ -36,7 +36,7 @@ class SVM(ML_Template):
         self.y_test = self.y_test.ravel()
 
         self.C = 1
-        self.gamma = 0.1
+        self.gamma = 0.01
         self.kernel = 'rbf'
 
 
@@ -50,18 +50,26 @@ class SVM(ML_Template):
         if gamma:
             self.gamma
 
-        SVM_Model = svm.SVC(kernel=self.kernel, C=self.C, gamma = self.gamma)
+        SVM_Model = svm.SVC(kernel=self.kernel, C=self.C, gamma = self.gamma,verbose=1)
         self.Model = SVM_Model
 
     def Fit(self):
         self.Model.fit(self.X_train,self.y_train)
+        y_pred = self.Model.predict(self.X_val)
+        val_acc = metrics.accuracy_score(self.y_val, y_pred)
 
+        print("Validation Accuracy:",val_acc)
+
+        return val_acc, y_pred
 
     def Test(self):
         y_pred = self.Model.predict(self.X_test)
-    
-        #replace with my own accuracy score
-        print("Accuracy:",metrics.accuracy_score(self.y_test, y_pred))
+        test_acc = metrics.accuracy_score(self.y_test, y_pred)
+
+        print("Accuracy:", test_acc)
+
+        return test_acc, y_pred
+
 
         
 
@@ -101,7 +109,7 @@ class SVM_HOG(ML_Template):
         self.y_test = self.y_test.ravel()
 
         self.C = 1
-        self.gamma = 0.1
+        self.gamma = 0.01
         self.kernel = 'rbf'
 
         self.Hog_train = None
@@ -117,7 +125,7 @@ class SVM_HOG(ML_Template):
             if gamma:
                 self.gamma
 
-            SVM_Model = svm.SVC(kernel=self.kernel, C=self.C, gamma = self.gamma)
+            SVM_Model = svm.SVC(kernel=self.kernel, C=self.C, gamma = self.gamma,verbose=1)
             self.Model = SVM_Model
 
 
@@ -169,8 +177,7 @@ class SVM_HOG(ML_Template):
                 
                 #Performs L2 norm to block
                 l2_norm = np.sqrt(np.sum(block ** 2) + 1e-6)  
-                norm_block = block / l2_norm
-                norm_block[x, y, :] = norm_block
+                norm_block[x, y, :] = block / l2_norm
 
         return norm_block.ravel()
 
@@ -192,22 +199,22 @@ class SVM_HOG(ML_Template):
 
 
     def Fit(self):
-        print(self.Hog_train)
-        try:
-            self.Model.fit(self.Hog_train,self.y_train)
-        except:
-            self.Model.fit(self.Hog_train,self.y_train)
- 
+        self.Model.fit(self.Hog_train,self.y_train)
+        y_pred = self.Model.predict(self.Hog_val)
+        val_acc = metrics.accuracy_score(self.y_val, y_pred)
+
+        print("Accuracy:", val_acc)
+
+        return val_acc, y_pred
+
 
     def Test(self):
-        try:
-            y_pred = self.Model.predict(self.Hog_test)
+        y_pred = self.Model.predict(self.Hog_test)
+        test_acc = metrics.accuracy_score(self.y_test, y_pred)
+
+        print("Test Accuracy:",test_acc)
         
-            #replace with my own accuracy score
-            print("Accuracy:",metrics.accuracy_score(self.y_test, y_pred))
-        except:
-            y_pred = self.Model.predict(self.Hog_test)
-            print("Accuracy:",metrics.accuracy_score(self.y_test, y_pred))
+        return test_acc, y_pred
 
 
 

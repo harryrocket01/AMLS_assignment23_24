@@ -1,3 +1,9 @@
+"""
+AMLS 1 Final Assessment - NN.py
+Binary and Multivariate Classification
+Author - Harry Softley-Graham
+Written - Nov 2023 - Jan 2024
+"""
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -44,12 +50,12 @@ class NN(ML_Template):
         model = model.lower()
         if model == "resnet":
             self.model = Sequential_Models.ResNet(dropout_rate = dropout_rate)
-        elif model =="ManyLayers":
+        elif model =="manylayers":
             self.model = Sequential_Models.CNN(dropout_rate=dropout_rate, layer=[32, 64, 128, 256,256,256, 128, 64])
-        elif model =="Alt":
+        elif model =="alt":
             self.model = Sequential_Models.CNN(dropout_rate=dropout_rate, layer= [32,64,128,32,128,32,128,64])
-        elif model =="":
-            pass
+        elif model =="final":
+            self.model = Sequential_Models.CNN_final(dropout_rate=dropout_rate)
         else:
             self.model = Sequential_Models.CNN(dropout_rate=dropout_rate, layer=layer)
         
@@ -58,17 +64,16 @@ class NN(ML_Template):
         if verbose:
             print(self.model.summary())
 
+    def SetHyperPerameters(self, epochs:int =None,batchsize: int = None,learningrate: float = None):
+        self.epochs = epochs if epochs else self.epochs
+        self.batchsize = batchsize if batchsize else self.batchsize
+        self.learningrate = learningrate if learningrate else self.learningrate
 
 
 
     #based off of the Keras Documentation
 
-    def Train(self,epochs=None,batchsize = None,learningrate = None,verbose: int = 1) -> dict:
-
-        self.epochs = epochs if epochs else self.epochs
-        self.batchsize = batchsize if batchsize else self.batchsize
-        self.learningrate = learningrate if learningrate else self.learningrate
-
+    def Train(self,verbose: int = 1) -> dict:
 
         #Check if there is a file
         filename = 'A\Models\PreTrainedModels\{}Model.keras'.format(self.name)
@@ -82,15 +87,11 @@ class NN(ML_Template):
             if verbose:
                 print("No Pre Trained Model, Training Model - {}Model.keras\n".format(self.name))
             os.makedirs(os.path.dirname(filename), exist_ok=True)
-            history = self.Custom_TrainLoop()
+            history = self.TrainLoop()
             self.model.save(filename)
             return history
 
-    def train_one_off(self,epochs=None,batchsize = None,learningrate = None,verbose: int = 0):
-        
-        self.epochs = epochs if epochs else self.epochs
-        self.batchsize = batchsize if batchsize else self.batchsize
-        self.learningrate = learningrate if learningrate else self.learningrate
+    def train_one_off(self,verbose: int = 0):
         history = self.TrainLoop(verbose=verbose)
 
         return history["train_acc"][-1], history["train_loss"][-1], history["val_acc"][-1], history["val_loss"][-1]
@@ -190,6 +191,40 @@ class NN(ML_Template):
 
         return history
 
+    def CrossValidation(self, name: str = "Final", loops: int = 3, verbos: int = 2, epochs: int = 10, batchsize : int = 32, learning_rate: float = 0.001, dropout_rate: float = 0.2):
+
+        results = {"train_acc":[],"train_loss":[],"val_acc":[],"val_loss":[]}
+
+        for val_loop in range(0,loops):
+            self.SetModel(model = name,dropout_rate=dropout_rate,verbose=0)
+            history = self.TrainLoop(verbose=0)
+            self.SetHyperPerameters(epochs=epochs,batchsize = batchsize,learningrate = learning_rate)
+
+            t_acc, t_loss, v_acc,v_loss = history["train_acc"][-1], history["train_loss"][-1], history["val_acc"][-1], history["val_loss"][-1]
+
+            results["train_acc"].append(t_acc)
+            results["train_loss"].append(t_loss)
+            results["val_acc"].append(v_acc)
+            results["val_loss"].append(v_loss)
+
+            if verbos > 1:
+                current_val = "Validation {}/{} - loss: {:.4f} - accuracy: {:.2f} - val_loss: {:.4f} - val_accuracy: {:.4f}"
+                current_val = current_val.format(val_loop+1,loops,
+                                            t_loss,t_acc,
+                                            v_loss,v_acc)
+                print(current_val)
+
+        t_acc_av = np.mean(results["train_acc"])
+        t_loss_av = np.mean(results["train_loss"])
+        v_acc_av = np.mean(results["val_acc"])
+        v_loss_av = np.mean(results["val_loss"])
+
+        if verbos >= 1:        
+            final_val = "Validation Final - loss: {:.4f} - accuracy: {:.2f} - val_loss: {:.4f} - val_accuracy: {:.4f}"
+            final_val = final_val.format(t_loss_av,t_acc_av,v_loss_av,v_acc_av)
+            print(final_val)
+        return t_acc_av, t_loss_av, v_acc_av, v_loss_av
+
 
     def Test(self, verbose: int = 1) -> (int, ArrayLike):
         test_dataset = tf.data.Dataset.from_tensor_slices((self.X_test, self.y_test))
@@ -247,7 +282,43 @@ class Sequential_Models():
 
         return model
 
+    def CNN_final(dropout_rate: float = 0.25):
+            model = models.Sequential()
 
+            model.add(layers.Input(shape=(28, 28, 1)))
+
+
+                
+            model.add(layers.Conv2D(32, (3, 3), 
+                                        activation='relu',
+                                        padding='same',
+                                        strides=1))
+            model.add(layers.Conv2D(32, (3, 3), 
+                                        activation='relu'))
+            
+            model.add(layers.MaxPooling2D((2, 2)))
+
+            model.add(layers.Dropout(dropout_rate))
+
+            model.add(layers.Conv2D(64, (3, 3), 
+                                        activation='relu',
+                                        padding='same',
+                                        strides=1))
+            model.add(layers.Conv2D(64, (3, 3), 
+                                        activation='relu'))
+
+            model.add(layers.MaxPooling2D((2, 2)))
+
+            model.add(layers.Flatten())
+            
+            model.add(layers.Dropout(0.5))
+
+            model.add(layers.Dense(64, 
+                                activation='relu'))
+            
+            model.add(layers.Dense(1, activation='sigmoid'))
+
+            return model
 
     def ResNet(dropout_rate: float = 0.5):
         model = models.Sequential()

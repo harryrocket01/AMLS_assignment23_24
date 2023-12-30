@@ -42,17 +42,23 @@ class RandomForest(ML_Template):
         
         self.Model = random_f
 
-
     def Fit(self):
         self.Model.fit(self.X_train,self.y_train)
+        y_pred = self.Model.predict(self.X_val)
+        val_acc = metrics.accuracy_score(self.y_val, y_pred)
+
+        print("Accuracy:", val_acc)
+
+        return val_acc, y_pred
 
 
     def Test(self):
         y_pred = self.Model.predict(self.X_test)
-    
-        #replace with my own accuracy score
-        print("Accuracy:",metrics.accuracy_score(self.y_test, y_pred))
+        test_acc = metrics.accuracy_score(self.y_test, y_pred)
 
+        print("Test Accuracy:",test_acc)
+        
+        return test_acc, y_pred
 
 
 class ADABoost(RandomForest):
@@ -78,6 +84,6 @@ class ADABoost(RandomForest):
 
 
         random_f = RandomForestClassifier(n_estimators=self.n_estimators, random_state=self.random_state)
-        ada_boost = AdaBoostClassifier(base_estimator=random_f, n_estimators=self.ada_n_estimators, random_state=self.random_state)
+        ada_boost = AdaBoostClassifier(estimator=random_f, n_estimators=self.ada_n_estimators, random_state=self.random_state)
 
         self.Model = ada_boost
