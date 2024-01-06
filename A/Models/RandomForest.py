@@ -1,14 +1,8 @@
+from A.Models.Template import ML_Template
 
 import sklearn
-
 from sklearn import metrics
-
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
-from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-
-from Models.Template import ML_Template
 
 class RandomForest(ML_Template):
 

@@ -21,7 +21,7 @@ class Plotting ():
 
         plt.tight_layout()
 
-    def Data_Represenation(self,x: ArrayLike, y:ArrayLike, title: str):
+    def data_represenation(self,x: ArrayLike, y:ArrayLike, title: str):
         True_Example = []
         False_Example = []
 
@@ -62,18 +62,23 @@ class Plotting ():
         fig.set_tight_layout(True)
         return axs, fig
     
-    def Confusion_Matrix(self, true_labels:ArrayLike, pred_labels:ArrayLike, title: str = "")-> None:
+    def confusion_matrix(self, true_labels:ArrayLike, pred_labels:ArrayLike, title: str = "")-> None:
         cm = confusion_matrix(true_labels, pred_labels)
 
         fig, axs = plt.subplots(figsize=(4, 4))
         sns.heatmap(cm, annot=True, fmt="d", cmap="crest", cbar=False,
                     xticklabels=np.unique(true_labels), yticklabels=np.unique(true_labels))
-        fig.set_tight_layout(True)
+
         axs.set_title(title)
+        axs.set_xlabel("Actual Values")
+        axs.set_ylabel("Predicted Values")
+        
+        fig.set_size_inches(3, 3)
+        fig.set_tight_layout(True)
 
         return fig, axs
 
-    def Line_Plot(self,x: ArrayLike, y:ArrayLike, title: str ="", x_label: str ="", y_label: str ="", legend: ArrayLike = []) -> (plt.Figure, plt.Axes):
+    def line_plot(self,x: ArrayLike, y:ArrayLike, title: str ="", x_label: str ="", y_label: str ="", legend: ArrayLike = []) -> (plt.Figure, plt.Axes):
         fig, axs = plt.subplots()
         counter = 1
 
@@ -94,35 +99,98 @@ class Plotting ():
 
         return fig, axs
     
-    def acc_loss_plot(acc,loss,val_acc,val_loss,x_axis):
+    def acc_loss_plot(self, acc: ArrayLike, loss: ArrayLike, val_acc: ArrayLike, val_loss: ArrayLike,
+                       x_axis, title: str):
+        
         fig, axs = plt.subplots()
         axs2 = axs.twinx() 
 
         axs.set_xlabel('Epochs')
         axs.set_ylabel('Accuracy', color="tab:red")
-        axs.plot(x_axis, acc, color="tab:red")
-        axs.plot(x_axis, val_acc, color="tab:red", alpha=0.8)
+        axs.plot(x_axis, acc, color="tab:red",label = 'Train Accuracy')
+        axs.plot(x_axis, val_acc, color="tab:red", alpha=0.6,label = 'Val Accuracy')
 
         axs.tick_params(axis='y', labelcolor="tab:red")
 
 
         axs2.set_ylabel('Loss', color="tab:blue")
-        axs2.plot(x_axis, loss, color="tab:blue")
-        axs2.plot(x_axis, val_loss, color="tab:blue", alpha=0.8)
+        axs2.plot(x_axis, loss, color="tab:blue",label = 'Train Loss')
+        axs2.plot(x_axis, val_loss, color="tab:blue", alpha=0.6 ,label = 'Val Loss')
         axs2.tick_params(axis='y', labelcolor="tab:blue")
+
+        lines, labels = axs.get_legend_handles_labels()
+        lines2, labels2 = axs2.get_legend_handles_labels()
+        axs2.legend(lines + lines2, labels + labels2, loc="lower right")
         
-        fig.set_size_inches(3.5, 2)
+        axs.set_title(title)
+
+        fig.set_size_inches(5.5, 3)
         fig.set_tight_layout(True)
 
-        plt.show()
+        return fig, axs
 
 
+    def learningrate_plot(self, acc1: ArrayLike, vacc1: ArrayLike, 
+                          acc2: ArrayLike, vacc2: ArrayLike,
+                          acc3: ArrayLike, vacc3: ArrayLike, 
+                          x_axis,lr): 
+        fig, axs = plt.subplots(3)
+
+        axs[0].set_ylabel('Accuracy')
+        axs[0].plot(x_axis, acc1)
+        axs[0].plot(x_axis, vacc1)
+        axs[0].set_title("Learning rate = "+str(lr[0]))
+        axs[0].legend(["Train Accuracy","Validation Accuracy"])
+
+        axs[1].set_ylabel('Accuracy')
+        axs[1].plot(x_axis, acc2)
+        axs[1].plot(x_axis, vacc2)
+        axs[1].set_title("Learning rate = "+str(lr[1]))
+
+        
+        axs[2].set_xlabel('Epochs')
+        axs[2].set_ylabel('Accuracy')
+        axs[2].plot(x_axis, acc3)
+        axs[2].plot(x_axis, vacc3)
+        axs[2].set_title("Learning rate = "+str(lr[2]))
+
+        fig.set_tight_layout(True)
+        fig.set_size_inches(5, 4)
+
+        fig.suptitle("Effect of changing learning rate on CNN")
+
+        return fig, axs
 
 
-    def HP_Line_plot(data,lr,bs,epochs):
-        pass
+    def dr_bs_plot(self, acc1: ArrayLike, vacc1: ArrayLike, 
+                          acc2: ArrayLike, vacc2: ArrayLike,
+                          x_axis1, x_axis2): 
+        
+        fig, axs = plt.subplots(1, 2)
+
+        axs[0].set_ylabel('Accuracy')
+        axs[0].set_xlabel('BS (Log 2)')
+
+        axs[0].plot(x_axis1, acc1)
+        axs[0].plot(x_axis1, vacc1)
+        axs[0].set_title("Effect of changing Batch Size")
+        axs[0].set_xscale('log', base=2)
+
+        axs[1].set_ylabel('Accuracy')
+        axs[1].set_xlabel('DR')
+        axs[1].plot(x_axis2, acc2)
+        axs[1].plot(x_axis2, vacc2)
+        axs[1].set_title("Effect of changing Dropout Rate")
+        axs[1].legend(["Train Accuracy","Validation Accuracy"])
+
+        fig.set_tight_layout(True)
+        fig.set_size_inches(6, 3)
+
+        fig.suptitle("Effect of of changing BS and DR")
+
+        return fig, axs
     
-    def Metrics(self, true_labels:ArrayLike, pred_labels:ArrayLike):
+    def metrics(self, true_labels:ArrayLike, pred_labels:ArrayLike):
         true_labels = np.array(true_labels)
         pred_labels = np.array(pred_labels)
 

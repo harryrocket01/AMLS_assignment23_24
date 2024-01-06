@@ -4,33 +4,21 @@ Binary and Multivariate Classification
 Author - Harry Softley-Graham
 Written - Nov 2023 - Jan 2024
 """
+from A.Models.Template import ML_Template
+
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import numpy as np
 from numpy.typing import ArrayLike
-
-import pandas as pd
-
-from sklearn.svm import SVC
-
-import matplotlib.pyplot as plt
-
-from sklearn.metrics import confusion_matrix
-
 import time
-
-from sklearn.preprocessing import StandardScaler
-
 import tensorflow as tf
 import keras
 from keras import layers
-
 from tensorflow.keras import datasets, layers, models,optimizers
 from tensorflow.keras.applications import ResNet50
 
-from Models.Template import ML_Template
 
 class NN(ML_Template):
 
@@ -41,9 +29,9 @@ class NN(ML_Template):
 
         self.history = None
 
-        self.epochs = 5
-        self.batchsize = 64
-        self.learningrate = 0.001
+        self.epochs = 25
+        self.batchsize = 32
+        self.learningrate = 0.0001
 
 
     def SetModel(self,model = "NN",verbose: int = 1,dropout_rate: float = 0.5, layer: ArrayLike = [32,64,64]) -> None:
@@ -57,7 +45,7 @@ class NN(ML_Template):
         elif model =="final":
             self.model = Sequential_Models.CNN_final(dropout_rate=dropout_rate)
         else:
-            self.model = Sequential_Models.CNN(dropout_rate=dropout_rate, layer=layer)
+            self.model = Sequential_Models.CNN_final(dropout_rate=dropout_rate)
         
         self.name = model
 
@@ -87,12 +75,12 @@ class NN(ML_Template):
             if verbose:
                 print("No Pre Trained Model, Training Model - {}Model.keras\n".format(self.name))
             os.makedirs(os.path.dirname(filename), exist_ok=True)
-            history = self.TrainLoop()
+            history = self.Custom_TrainLoop()
             self.model.save(filename)
             return history
 
     def train_one_off(self,verbose: int = 0):
-        history = self.TrainLoop(verbose=verbose)
+        history = self.Custom_TrainLoop(verbose=verbose)
 
         return history["train_acc"][-1], history["train_loss"][-1], history["val_acc"][-1], history["val_loss"][-1]
 
@@ -197,7 +185,7 @@ class NN(ML_Template):
 
         for val_loop in range(0,loops):
             self.SetModel(model = name,dropout_rate=dropout_rate,verbose=0)
-            history = self.TrainLoop(verbose=0)
+            history = self.Custom_TrainLoop(verbose=0)
             self.SetHyperPerameters(epochs=epochs,batchsize = batchsize,learningrate = learning_rate)
 
             t_acc, t_loss, v_acc,v_loss = history["train_acc"][-1], history["train_loss"][-1], history["val_acc"][-1], history["val_loss"][-1]

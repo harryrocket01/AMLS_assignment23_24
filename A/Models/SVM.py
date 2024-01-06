@@ -1,25 +1,15 @@
+from A.Models.Template import ML_Template
+
 import numpy as np
 from numpy.typing import ArrayLike
-
-import pandas as pd
 
 import sklearn
 from sklearn.svm import SVC
 from sklearn import svm
-
 from sklearn import metrics
-
 from sklearn.model_selection import GridSearchCV
-
-from skimage import color
-from skimage.feature import hog
 from scipy import ndimage
-
-from sklearn.metrics import classification_report,accuracy_score
 import matplotlib.pyplot as plt
-
-#Import ML Template
-from Models.Template import ML_Template
 
 class SVM(ML_Template):
 
