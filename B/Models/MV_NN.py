@@ -43,7 +43,11 @@ class MV_CNN(ML_Template):
     def SetModel(self,Model = "NN"):
         Model = Model.lower()
         if Model == "resnet":
-            self.model = Sequential_Models.ResNet_test()
+            self.model = Sequential_Models.ResNet()
+        elif Model == "resnet2":
+            self.model = Sequential_Models.ResNet_2()
+        elif Model == "resnet50":
+            self.model = Sequential_Models.ResNet_50()
         elif Model == "taska":
             self.model = Sequential_Models.CNN_A()
         elif Model == "deep":
@@ -58,18 +62,26 @@ class MV_CNN(ML_Template):
 
     #based off of the Keras Documentation
 
-    def Train(self):
+    def Train(self,verbose:int = 1):
 
         #Check if there is a file
         filename = 'B\Models\PreTrainedModels\{}Model.keras'.format(self.name)
 
         try:
             self.model = tf.keras.models.load_model(filename)
+            if verbose:
+                print("\nPre Trained Model Loaded - {}Model.keras".format(self.name))
 
+            return None
         except:
+            if verbose:
+                print("No Pre Trained Model, Training Model - {}Model.keras\n".format(self.name))
             os.makedirs(os.path.dirname(filename), exist_ok=True)
-            self.TrainLoop()
+            history = self.TrainLoop()
             self.model.save(filename)
+            
+            return history
+
 
     def SetHyperPerameters(self, epochs:int =None,batch_size: int = None,learning_rate: float = None):
         self.epochs = epochs if epochs else self.epochs
@@ -164,7 +176,6 @@ class MV_CNN(ML_Template):
                                         train_loss,train_acc,
                                         val_loss,val_acc)
                 print(to_print)
-
         return history                                                                                        
     
     def Test(self, verbose: int = 1) -> (int, ArrayLike):
@@ -191,6 +202,8 @@ class MV_CNN(ML_Template):
         test_acc_metric.reset_states()
 
         y_pred_np = np.array(y_pred)
+
+        print(y_pred_np.tolist())
 
         #convert back from one hot encoded
         y_pred_np = np.argmax(y_pred_np,  axis=1)
@@ -225,7 +238,7 @@ class Sequential_Models():
         model.add(layers.Dense(64, 
                                activation='relu'))
         
-        model.add(layers.Dense(9))
+        model.add(layers.Dense(9, activation="softmax"))
 
         return model
     
@@ -263,7 +276,7 @@ class Sequential_Models():
             model.add(layers.Dense(64, 
                                 activation='relu'))
             
-            model.add(layers.Dense(9))
+            model.add(layers.Dense(9, activation="softmax"))
 
             return model
 
@@ -316,11 +329,11 @@ class Sequential_Models():
             model.add(layers.Dense(64, 
                                 activation='relu'))
             
-            model.add(layers.Dense(9))
+            model.add(layers.Dense(9, activation="softmax"))
 
             return model
 
-    def ResNet():
+    def ResNet_50():
         model = models.Sequential()
 
         model.add(layers.Input(shape=(28, 28, 3)))
@@ -340,7 +353,7 @@ class Sequential_Models():
 
         return model
 
-    def ResNet_test(dropout_rate: int = 0.5):
+    def ResNet(dropout_rate: int = 0.5):
         inputs = keras.Input(shape=(28, 28, 3))
         main_path = layers.Conv2D(32, (3, 3), 
                                   activation="relu")(inputs)
@@ -370,11 +383,58 @@ class Sequential_Models():
         main_path = layers.Dense(128, 
                                  activation="relu")(main_path)
         main_path = layers.Dropout(dropout_rate)(main_path)
-        outputs = layers.Dense(9)(main_path)
+        outputs = layers.Dense(9, activation="softmax")(main_path)
 
         model = keras.Model(inputs, outputs, name="Residual_Network")
 
         model.summary()
         return model
 
+    def ResNet_2(dropout_rate: int = 0.5):
+        inputs = keras.Input(shape=(28, 28, 3))
+        main_path = layers.Conv2D(32, (3, 3), 
+                                  activation="relu")(inputs)
+        main_path = layers.Conv2D(64, (3, 3), 
+                                  activation="relu")(main_path)
+
+        output_1 = layers.MaxPooling2D((2,2))(main_path)
+
+        main_path = layers.Conv2D(64, 3, activation="relu", 
+                                  padding="same")(output_1)
+        main_path = layers.Conv2D(64, 3, activation="relu", 
+                                  padding="same")(main_path)
+        output_2 = layers.add([main_path, output_1])
+
+        main_path = layers.Conv2D(128, 3, activation="relu", 
+                                  padding="same")(output_2)
+        main_path = layers.Conv2D(128, 3, activation="relu", 
+                                  padding="same")(main_path)
+        output_3 = layers.add([main_path, output_2])
+
+        main_path = layers.Conv2D(128, 3, activation="relu", 
+                                  padding="same")(output_3)
+        main_path = layers.Conv2D(128, 3, activation="relu", 
+                                  padding="same")(main_path)
+        output_4 = layers.add([main_path, output_3])
+
+        main_path = layers.Conv2D(64, 3, activation="relu", 
+                                  padding="same")(output_2)
+        main_path = layers.Conv2D(64, 3, activation="relu", 
+                                  padding="same")(main_path)
+        block_5_output = layers.add([main_path, output_4])
+       
+        main_path = layers.Conv2D(64, (3, 3), 
+                                  activation="relu")(block_5_output)
+
+        main_path = layers.MaxPooling2D((2,2))(main_path)
+
+        main_path = layers.GlobalAveragePooling2D()(main_path)
+        main_path = layers.Dense(128, 
+                                 activation="relu")(main_path)
+        main_path = layers.Dropout(dropout_rate)(main_path)
+        outputs = layers.Dense(9, activation="softmax")(main_path)
+
+        model = keras.Model(inputs, outputs, name="Residual_Network")
+
         model.summary()
+        return model

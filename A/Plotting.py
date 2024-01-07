@@ -6,8 +6,38 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
 class Plotting ():
+    """
+    class: PreProcessing
 
-    def __init__(self) -> None:
+    Utility class for preprocessing data in task A
+
+    Attributes:
+        plt.rcParams: Matplot Lib instances with IEEE plotting styling
+
+    Methods:
+        __init__(): Initializes the class
+        data_represenation(): Plots an example of each class
+        confusion_matrix(): Plots a confusion Matrix 
+        line_plot(): Plots a line plot
+        acc_loss_plot(): plots accuracy loss plot
+        learningrate_plot(): plots that show effect of learning rate
+        dr_bs_plot(): plots effect of Dropout and Batchsize
+        metrics()
+    Example:
+        task_instance = Plotting()
+    """
+    def __init__(self):
+        """
+        __init__
+
+        sets plotting style to IEEE for plotting
+
+        return:
+            to_return (ArrayLike): Array of rotated images
+
+        Example:
+            task_instance = Plotting()
+        """
         plt.rcParams['font.family'] = 'serif'
         plt.rcParams['font.size'] = 8
 
@@ -22,6 +52,23 @@ class Plotting ():
         plt.tight_layout()
 
     def data_represenation(self,x: ArrayLike, y:ArrayLike, title: str):
+        """
+        function: data_represenation
+
+        Creates a plot that shows and example of each class
+
+        args:
+            x (ArrayLike): images to represent
+            y (ArrayLike): labels of class
+            title (str): title for plot
+
+        return:
+            fig (plt.Figure): Matplotlib Figure Class of plot
+            axs (plt.Axes): Matplotlib Axes Class of plot
+
+        Example:
+            fig, axs = Plotting(Dataset, Labels).data_represenation(x,y,title)
+        """
         True_Example = []
         False_Example = []
 
@@ -63,6 +110,23 @@ class Plotting ():
         return axs, fig
     
     def confusion_matrix(self, true_labels:ArrayLike, pred_labels:ArrayLike, title: str = "")-> None:
+        """
+        function: confusion_matrix
+
+        Creates a confusion matrix plot from true and predicted labels
+
+        args:
+            true_labels (ArrayLike): Array of True Labels
+            pred_labels (ArrayLike): Array of Predicted Labels
+            title (string): Title for plot
+        
+        return:
+            fig (plt.Figure): Matplotlib Figure Class of plot
+            axs (plt.Axes): Matplotlib Axes Class of plot
+
+        Example:
+            fig, axs = Plotting(Dataset, Labels).confusion_matrix(true_labels,pred_labels,title)
+        """
         cm = confusion_matrix(true_labels, pred_labels)
 
         fig, axs = plt.subplots(figsize=(4, 4))
@@ -70,7 +134,7 @@ class Plotting ():
                     xticklabels=np.unique(true_labels), yticklabels=np.unique(true_labels))
 
         axs.set_title(title)
-        axs.set_xlabel("Actual Values")
+        axs.set_xlabel("True Values")
         axs.set_ylabel("Predicted Values")
         
         fig.set_size_inches(3, 3)
@@ -79,6 +143,26 @@ class Plotting ():
         return fig, axs
 
     def line_plot(self,x: ArrayLike, y:ArrayLike, title: str ="", x_label: str ="", y_label: str ="", legend: ArrayLike = []) -> (plt.Figure, plt.Axes):
+        """
+        function: line_plot
+
+        Creates a line plot from two inputted arrays
+        
+        args:
+            x (ArrayLike): array to plot on x axis
+            y (ArrayLike): array to plot on y axis
+            title (str): title for plot
+            x_label (str): X axis Label
+            y_label (str): Y axis Label
+            legend (ArrayLike): Array for plot legend
+
+        return:
+            fig (plt.Figure): Matplotlib Figure Class of plot
+            axs (plt.Axes): Matplotlib Axes Class of plot
+
+        Example:
+            fig, axs = Plotting(Dataset, Labels).line_plot(x,y,title)
+        """
         fig, axs = plt.subplots()
         counter = 1
 
@@ -100,8 +184,28 @@ class Plotting ():
         return fig, axs
     
     def acc_loss_plot(self, acc: ArrayLike, loss: ArrayLike, val_acc: ArrayLike, val_loss: ArrayLike,
-                       x_axis, title: str):
+                       x_axis, title: str = ""):
+        """
+        function: acc_loss_plot
+
+        Creates an two y-axis accuracy-loss plot from inputted arrays
         
+        args:
+            acc (ArrayLike): Array of train accuracy points
+            loss (ArrayLike): Array of train loss points
+            val_acc (ArrayLike): Array of validation accuracy points
+            val_loss (ArrayLike): Array of validation loss points
+            x_axis (ArrayLike): array of epochs
+            title (str): Title for plot
+
+        return:
+            fig (plt.Figure): Matplotlib Figure Class of plot
+            axs (plt.Axes): Matplotlib Axes Class of plot
+
+        Example:
+            fig, axs = Plotting(Dataset, Labels).acc_loss_plot(acc,loss,v_acc,v_loss)
+        """
+
         fig, axs = plt.subplots()
         axs2 = axs.twinx() 
 
@@ -111,7 +215,6 @@ class Plotting ():
         axs.plot(x_axis, val_acc, color="tab:red", alpha=0.6,label = 'Val Accuracy')
 
         axs.tick_params(axis='y', labelcolor="tab:red")
-
 
         axs2.set_ylabel('Loss', color="tab:blue")
         axs2.plot(x_axis, loss, color="tab:blue",label = 'Train Loss')
@@ -134,6 +237,27 @@ class Plotting ():
                           acc2: ArrayLike, vacc2: ArrayLike,
                           acc3: ArrayLike, vacc3: ArrayLike, 
                           x_axis,lr): 
+        """
+        function: acc_loss_plot
+
+        Creates plot that compares 3 learningrates on the same model
+        
+        args:
+            acc1 (ArrayLike): Array of train accuracy1 points
+            vacc1 (ArrayLike): Array of validation accuracy1 points
+            acc2 (ArrayLike): Array of train accuracy2 points
+            vacc2 (ArrayLike): Array of validation accuracy2 points
+            acc3 (ArrayLike): Array of train accuracy3 points
+            vacc3 (ArrayLike): Array of validation accuracy3 points
+            x_axis (ArrayLike): array of epochs
+
+        return:
+            fig (plt.Figure): Matplotlib Figure Class of plot
+            axs (plt.Axes): Matplotlib Axes Class of plot
+
+        Example:
+            fig, axs = Plotting(Dataset, Labels).learningrate_plot()
+        """
         fig, axs = plt.subplots(3)
 
         axs[0].set_ylabel('Accuracy')
@@ -165,7 +289,26 @@ class Plotting ():
     def dr_bs_plot(self, acc1: ArrayLike, vacc1: ArrayLike, 
                           acc2: ArrayLike, vacc2: ArrayLike,
                           x_axis1, x_axis2): 
+        """
+        function: dr_bs_plot
+
+        Creates plot that compares 3 learningrates on the same model
         
+        args:
+            acc1 (ArrayLike): Array of train accuracy1 points
+            vacc1 (ArrayLike): Array of validation accuracy1 points
+            acc2 (ArrayLike): Array of train accuracy2 points
+            vacc2 (ArrayLike): Array of validation accuracy2 points
+            x_axis1(ArrayLike): Array of batch sizes
+            x_axis2 (ArrayLike): Array of Dropout rates
+
+        return:
+            fig (plt.Figure): Matplotlib Figure Class of plot
+            axs (plt.Axes): Matplotlib Axes Class of plot
+
+        Example:
+            fig, axs = Plotting(Dataset, Labels).dr_bs_plot()
+        """
         fig, axs = plt.subplots(1, 2)
 
         axs[0].set_ylabel('Accuracy')
@@ -191,6 +334,25 @@ class Plotting ():
         return fig, axs
     
     def metrics(self, true_labels:ArrayLike, pred_labels:ArrayLike):
+        """
+        function: metrics
+
+        Creates plot that compares 3 learningrates on the same model
+        
+        args:
+            true_labels (ArrayLike): Array of True Labels
+            pred_labels (ArrayLike): Array of Predicted Labels
+
+        return:
+            Accuracy (float): Accuracy of the given classifcation prediction
+            Precision (float): Precision of the given classifcation prediction
+            Recall (float): Recall of the given classifcation prediction
+            Specificity (float): Specificity of the given classifcation prediction
+            F1_score (float): F1 Score of the given classifcation prediction
+
+        Example:
+            fig, axs = Plotting(Dataset, Labels).metrics(true_labels,pred_labels)
+        """
         true_labels = np.array(true_labels)
         pred_labels = np.array(pred_labels)
 

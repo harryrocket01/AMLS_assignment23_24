@@ -59,6 +59,9 @@ class Plotting ():
         fig.set_tight_layout(True)
         axs.set_title(title)
 
+        axs.set_xlabel("Actual Values")
+        axs.set_ylabel("Predicted Values")
+
         return fig, axs
 
     def Line_Plot(self,x: ArrayLike, y:ArrayLike, title: str, x_label: str, y_label: str, legend) -> (plt.Figure, plt.Axes):
@@ -82,3 +85,44 @@ class Plotting ():
 
         return fig, axs
     
+    
+    def metrics(self, true_labels:ArrayLike, pred_labels:ArrayLike):
+        true_labels = np.array(true_labels)
+        pred_labels = np.array(pred_labels)
+
+        num_classes = len(np.unique(true_labels))
+
+        confusion_matrix = np.zeros((num_classes, num_classes), dtype=int)
+
+        for i in range(num_classes):
+            for j in range(num_classes):
+                confusion_matrix[i, j] = np.sum((true_labels == i) & (pred_labels == j))
+
+        precision = np.zeros(num_classes, dtype=float)
+        recall = np.zeros(num_classes, dtype=float)
+        accuracy = np.trace(confusion_matrix) / np.sum(confusion_matrix)
+
+        for i in range(num_classes):
+            TP = confusion_matrix[i, i]
+            FP = np.sum(confusion_matrix[:, i]) - TP
+            FN = np.sum(confusion_matrix[i, :]) - TP
+
+            if TP + FP != 0:
+                precision[i] = TP / (TP + FP)
+            else:
+                precision[i] = 0
+            if TP + FP != 0:
+                recall[i] = TP / (TP + FN)
+            else:
+                recall[i] = 0
+
+        if (np.mean(precision) + np.mean(recall)) != 0:
+            f1_score = 2 * np.mean(precision) * np.mean(recall) / (np.mean(precision) + np.mean(recall)) 
+        else:
+            f1_score=  0
+
+        print("Accuracy: {:.4f} | Precision: {:.4f} | Recall: {:.4f} | F1_score: {:.4f}".format(
+            accuracy, np.mean(precision), np.mean(recall), f1_score))
+
+        return accuracy, np.mean(precision), np.mean(recall), f1_score
+

@@ -73,10 +73,10 @@ class Task_B:
         pass
 
 
-    def RunNN(self, model_name: str = "deep"):
+    def RunNN(self, model_name: str = "resnet"):
         image_directory = "./B/Graphics/CNN/"
 
-        epochs = 3
+        epochs = 30
         learning_rate = 0.001
         batch_size = 32
 
@@ -94,17 +94,19 @@ class Task_B:
                                             x_label ="No. of Epochs", 
                                             y_label ="Accuracy", 
                                             legend = ["Train Accuracy","Validation Accuracy"])
-            plt.show()
             axs.figure.savefig(image_directory+model_name+"_Accuracy_plot.pdf")
         
         print("\nRESULTS\n")
         
         accuracy, result = Model.Test()
-
+        print(result)
+        print(self.y_test)
         true_labels = np.argmax(self.y_test,  axis=1)
 
+        Plotting().metrics(true_labels,result)
+
         fig, axs = Plotting().Confusion_Matrix(true_labels = true_labels, pred_labels=result,
-                                                title= "Confusion Matrix of "+model_name+" of test set")
+                                                title= "Confusion Matrix of "+model_name+" on the test set")
         axs.figure.savefig(image_directory+model_name+"_Confusion_Matrix.pdf")
 
 

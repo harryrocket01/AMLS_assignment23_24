@@ -48,7 +48,7 @@ class TaskA:
 
     def __init__ (self):
         """
-        __init__: Initialisas class A
+        __init__
 
         The function imports the dataset, extracts training, validation, and test data,
         reshapes and flattens the images, sets labels, performs data representation plotting,
@@ -99,9 +99,9 @@ class TaskA:
         axs.figure.savefig('./A/Graphics/Unprocessed_A_Data.pdf')
         
         #Data augmentation
-        self.X_train, self.y_train = PreProcessing(self.X_train,self.y_train).new_Data(Loops=1)
-        self.X_val, self.y_val = PreProcessing(self.X_val,self.y_val).new_Data(Loops=1)
-        #self.X_test, Labels = PreProcessing(self.X_test,self.y_test).new_Data()
+        self.X_train, self.y_train = PreProcessing(self.X_train,self.y_train).new_Data(loops=1)
+        self.X_val, self.y_val = PreProcessing(self.X_val,self.y_val).new_Data(loops=1)
+        #self.X_test, self.y_test = PreProcessing(self.X_test,self.y_test).new_Data(loops=1)
 
         #data normalisation
         self.X_train = PreProcessing.normalisation(self.X_train)
@@ -245,10 +245,10 @@ class TaskA:
         model_name = "final"
 
         model = NN(self.X_train,self.y_train,self.X_val,self.y_val,self.X_test,self.y_test)
-        model.SetModel(model=model_name,dropout_rate=dropout_rate,)
-        model.SetHyperPerameters(epochs=epochs, batchsize = batch_size, 
+        model.set_model(model=model_name,dropout_rate=dropout_rate,)
+        model.set_hyper_perameters(epochs=epochs, batchsize = batch_size, 
                                 learningrate = learning_rate)
-        history = model.Train()
+        history = model.train()
 
         if history:
             x_scale =  np.linspace(1, len(history["train_acc"]),num=len(history["train_acc"]), endpoint=True)
@@ -258,7 +258,7 @@ class TaskA:
             axs.figure.savefig(image_directory+"Final_Accuracy_plot.pdf")
         
         print("\nRESULTS\n")
-        accuracy, result = model.Test()
+        accuracy, result = model.test()
         true_labels = np.array(self.y_test).flatten()
         fig, axs = Plotting().confusion_matrix(true_labels = true_labels, pred_labels=result,
                                                 title= "Confusion Matrix of test set for Final Model")
@@ -288,7 +288,7 @@ class TaskA:
         for value in epochs:
             Model = NN(self.X_train,self.y_train,self.X_val,self.y_val,self.X_test,self.y_test)
 
-            t_acc_av, t_loss_av, v_acc_av, v_loss_av = Model.CrossValidation( name = "Final", loops = 5,
+            t_acc_av, t_loss_av, v_acc_av, v_loss_av = Model.cross_validation( name = "Final", loops = 5,
                                                 epochs = value, batchsize = batch_size,
                                                 learning_rate = learning_rate, dropout_rate = dropout_rate)
             results["train_acc"].append(t_acc_av)
@@ -317,20 +317,20 @@ class TaskA:
 
         #LR = 0.01
         Model1 = NN(self.X_train,self.y_train,self.X_val,self.y_val,self.X_test,self.y_test)
-        Model1.SetModel(verbose=0,dropout_rate=0.25)
-        Model1.SetHyperPerameters(learningrate = lr[0], epochs=epochs)
+        Model1.set_model(verbose=0,dropout_rate=0.25)
+        Model1.set_hyper_perameters(learningrate = lr[0], epochs=epochs)
         history1 = Model1.TrainLoop()
 
         #LR = 0.0001
         Model2 = NN(self.X_train,self.y_train,self.X_val,self.y_val,self.X_test,self.y_test)
-        Model2.SetModel(verbose=0,dropout_rate=0.25)
-        Model2.SetHyperPerameters(learningrate = lr[1], epochs=epochs)
+        Model2.set_model(verbose=0,dropout_rate=0.25)
+        Model2.set_hyper_perameters(learningrate = lr[1], epochs=epochs)
         history2 = Model2.TrainLoop()
 
         #LR = 0.0000001
         Model3 = NN(self.X_train,self.y_train,self.X_val,self.y_val,self.X_test,self.y_test)
-        Model3.SetModel(verbose=0,dropout_rate=0.25)
-        Model3.SetHyperPerameters(learningrate = lr[2], epochs=epochs)
+        Model3.set_model(verbose=0,dropout_rate=0.25)
+        Model3.set_hyper_perameters(learningrate = lr[2], epochs=epochs)
         history3 = Model3.TrainLoop()
 
         fig, axs = Plotting().learningrate_plot(history1["train_acc"], history1["val_acc"], 
@@ -364,8 +364,8 @@ class TaskA:
         #Loop for Batch size changes
         for bs in batch_size:
             Model = NN(self.X_train,self.y_train,self.X_val,self.y_val,self.X_test,self.y_test)
-            Model.SetModel(verbose=0, dropout_rate = base[3])
-            Model.SetHyperPerameters(epochs=base[2],batchsize = bs,learningrate = base[0])
+            Model.set_model(verbose=0, dropout_rate = base[3])
+            Model.set_hyper_perameters(epochs=base[2],batchsize = bs,learningrate = base[0])
             train_acc, train_loss, val_acc, val_loss = Model.train_one_off()
             results[0].append(train_acc)
             results[1].append(val_acc)
@@ -373,8 +373,8 @@ class TaskA:
         #Loop for dropout rate changes
         for dr in dropout_rate:
             Model = NN(self.X_train,self.y_train,self.X_val,self.y_val,self.X_test,self.y_test)
-            Model.SetModel(verbose=0,dropout_rate=dr)
-            Model.SetHyperPerameters(epochs=base[2],batchsize = base[1],learningrate = base[0])
+            Model.set_model(verbose=0,dropout_rate=dr)
+            Model.set_hyper_perameters(epochs=base[2],batchsize = base[1],learningrate = base[0])
 
             train_acc, train_loss, val_acc, val_loss = Model.train_one_off()
             results[2].append(train_acc)

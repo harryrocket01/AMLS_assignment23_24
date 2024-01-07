@@ -21,6 +21,32 @@ from tensorflow.keras.applications import ResNet50
 
 
 class NN(ML_Template):
+    """
+    class: NN
+
+    Class containing all the functions to build, test, and train a CNN for
+    MLS1 Binary classification task.
+
+    Attributes:
+        name (str): name of model
+        history (array): array containing training history
+        epochs (int): number of epochs to train
+        batchsize (int): size of batchs when training
+        learningrate (float): learning rate hyper perameter
+
+    Methods:
+        __init__(): 
+        set_model(): sets model
+        set_hyper_perameters(): sets model hyper perameters
+        train(): trains new model, or load existing model
+        train_one_off(): trains without saving model
+        train_loop(): Tensor flow prebuilt train loop
+        custom_train_loop(): Custom Built train loop
+        cross_validation(): cross validates final model
+        test(): tests model
+    Example:
+        task_instance = NN()
+    """
 
     def __init__(self,X_train,y_train,X_val,y_val,X_test,y_test):
         super().__init__(X_train,y_train,X_val,y_val,X_test,y_test)
@@ -34,7 +60,21 @@ class NN(ML_Template):
         self.learningrate = 0.0001
 
 
-    def SetModel(self,model = "NN",verbose: int = 1,dropout_rate: float = 0.5, layer: ArrayLike = [32,64,64]) -> None:
+    def set_model(self,model = "final",verbose: int = 1,dropout_rate: float = 0.5,) -> None:
+        """
+        function: set_model
+        
+        Sets the model atrabute based off of string input.
+
+        args:
+            model (str): name of selected model
+            verbose (int): variable if outputs should be printed
+            dropout_rate (float): drop out hyper perameter
+
+        Example:
+            NN().set_model()
+        """
+
         model = model.lower()
         if model == "resnet":
             self.model = Sequential_Models.ResNet(dropout_rate = dropout_rate)
@@ -52,17 +92,40 @@ class NN(ML_Template):
         if verbose:
             print(self.model.summary())
 
-    def SetHyperPerameters(self, epochs:int =None,batchsize: int = None,learningrate: float = None):
+    def set_hyper_perameters(self, epochs:int =None,batchsize: int = None,learningrate: float = None):
+        """
+        function: set_hyper_perameters
+        
+        Used to set model hyperpermaters before training
+
+        args:
+            epochs (int): input for number of desired inputs
+            batchsize (int): input for desired batch size
+            learningrate (float): input for desired learning rate
+
+        Example:
+            NN().set_hyper_perameters(epoch,bs,lr)
+        """
         self.epochs = epochs if epochs else self.epochs
         self.batchsize = batchsize if batchsize else self.batchsize
         self.learningrate = learningrate if learningrate else self.learningrate
 
 
 
-    #based off of the Keras Documentation
 
-    def Train(self,verbose: int = 1) -> dict:
+    def train(self,verbose: int = 1) -> dict:
+        """
+        function: train
+        
+        Trains a model if none have been saved, once trained saves the model.
+        If a model has been saved, it is loaded instead.
 
+        args:
+            verbose (float): variable to indicate if a inline print should occur
+
+        Example:
+            NN().train()
+        """
         #Check if there is a file
         filename = 'A\Models\PreTrainedModels\{}Model.keras'.format(self.name)
         try:
@@ -72,22 +135,47 @@ class NN(ML_Template):
                 print("\nPre Trained Model Loaded - {}Model.keras".format(self.name))
             return None
         except:
+            #Trains if there is no file, then saves
             if verbose:
                 print("No Pre Trained Model, Training Model - {}Model.keras\n".format(self.name))
             os.makedirs(os.path.dirname(filename), exist_ok=True)
-            history = self.Custom_TrainLoop()
+            history = self.custom_train_loop()
             self.model.save(filename)
             return history
 
     def train_one_off(self,verbose: int = 0):
-        history = self.Custom_TrainLoop(verbose=verbose)
+        """
+        function: train_one_off
+        
+        Utility function that performs a one off train loop that does not save model
+
+        args:
+            verbose (float): variable to indicate if a inline print should occur
+
+        Example:
+            NN().train_one_off()
+        """
+        history = self.custom_train_loop(verbose=verbose)
 
         return history["train_acc"][-1], history["train_loss"][-1], history["val_acc"][-1], history["val_loss"][-1]
 
 
 
-    def TrainLoop(self,verbose: int = 1) -> dict:
+    def train_loop(self,verbose: int = 1) -> dict:
+        """
+        function: train_loop
+        
+        Trains CNN using tensorflows pre built train_loop function.
 
+        args:
+            verbose (float): variable to indicate if a inline print should occur
+
+        returns:
+            history (dict): dictionary of training history, including train and validation loss and accuracy
+
+        Example:
+            NN().train_loop()
+        """
         history = {}
 
         optimizer = tf.keras.optimizers.Adam(learning_rate=self.learningrate)
@@ -107,16 +195,27 @@ class NN(ML_Template):
 
         return history
 
-    def Custom_TrainLoop(self,verbose: int = 1) -> dict:
+    def custom_train_loop(self,verbose: int = 1) -> dict:
+        """
+        function: custom_train_loop
+        
+        Custom built train loop that trains and validates cnn model. Built
+        based off of the keras documentation.
 
+        args:
+            verbose (float): variable to indicate if a inline print should occur
+
+        returns:
+            history (dict): dictionary of training history, including train and validation loss and accuracy
+            
+        Example:
+            NN().custom_train_loop()
+        """
         history = {"train_acc":[],"train_loss":[],"val_loss":[],"val_acc":[],"train_time":[]}
 
 
         #Defining optomisor and loss function
         optimizer = keras.optimizers.Adam(self.learningrate)
-
-
-        
         loss = tf.keras.losses.BinaryCrossentropy()
 
         #Converting Traning dataset to tensor
@@ -130,7 +229,6 @@ class NN(ML_Template):
         #Defidning accuracy metrics
         train_acc_metric = keras.metrics.BinaryAccuracy() 
         val_acc_metric = keras.metrics.BinaryAccuracy()
-
 
         #Main Training Loop
         for epoch in range(self.epochs):
@@ -179,14 +277,36 @@ class NN(ML_Template):
 
         return history
 
-    def CrossValidation(self, name: str = "Final", loops: int = 3, verbos: int = 2, epochs: int = 10, batchsize : int = 32, learning_rate: float = 0.001, dropout_rate: float = 0.2):
+    def cross_validation(self, name: str = "Final", loops: int = 3, verbos: int = 2, epochs: int = 10, batchsize : int = 32, learning_rate: float = 0.001, dropout_rate: float = 0.2):
+        """
+        function: cross_validation
+        
+        Cross validates model, based of the number of passed values
 
+        args:
+            name (str):  Name of model to cross validate
+            loops (int):  Number of folds to cross validate
+            verbos (int):  indicator if there should be inline prints
+            epochs (int):  Number of epochs for model
+            batchsize (int):  Batch size of model
+            learning_rate (float):  Learning rate of model
+            dropout_rate (float):  Dropout rate of model
+
+        returns:
+            t_acc_av (float): average test accuracy of cross validation
+            t_loss_av (float): average test loss of cross validation
+            v_acc_av (float): average validation accuracy of cross validation
+            v_loss_av (float): average validation loss of cross validation
+        """
         results = {"train_acc":[],"train_loss":[],"val_acc":[],"val_loss":[]}
 
+        #number of training folds
         for val_loop in range(0,loops):
-            self.SetModel(model = name,dropout_rate=dropout_rate,verbose=0)
-            history = self.Custom_TrainLoop(verbose=0)
-            self.SetHyperPerameters(epochs=epochs,batchsize = batchsize,learningrate = learning_rate)
+
+            #set model
+            self.set_model(model = name,dropout_rate=dropout_rate,verbose=0)
+            self.set_hyper_perameters(epochs=epochs,batchsize = batchsize,learningrate = learning_rate)
+            history = self.custom_train_loop(verbose=0)
 
             t_acc, t_loss, v_acc,v_loss = history["train_acc"][-1], history["train_loss"][-1], history["val_acc"][-1], history["val_loss"][-1]
 
@@ -202,6 +322,7 @@ class NN(ML_Template):
                                             v_loss,v_acc)
                 print(current_val)
 
+        #calculates inal results
         t_acc_av = np.mean(results["train_acc"])
         t_loss_av = np.mean(results["train_loss"])
         v_acc_av = np.mean(results["val_acc"])
@@ -214,7 +335,19 @@ class NN(ML_Template):
         return t_acc_av, t_loss_av, v_acc_av, v_loss_av
 
 
-    def Test(self, verbose: int = 1) -> (int, ArrayLike):
+    def test(self, verbose: int = 1) -> (int, ArrayLike):
+        """
+        function: test
+        
+        Tests model using provided training set
+
+        args:
+            verbose (float):  Indicator for if inline prints should occur
+
+        returns:
+            test_acc (float): Binary Test Accuracy value
+            y_pred_np (Array): Array of predicted values
+        """
         test_dataset = tf.data.Dataset.from_tensor_slices((self.X_test, self.y_test))
         test_dataset = test_dataset.batch(self.batchsize) 
 
@@ -227,7 +360,6 @@ class NN(ML_Template):
             batch_pred = (test_logits >= 0.5).numpy().astype(int)
             test_acc_metric.update_state(y_batch_test, test_logits)
             y_pred.extend(batch_pred)
-            #y_pred.extend(batch_pred)
 
         test_acc = test_acc_metric.result()
         if verbose:
@@ -238,15 +370,38 @@ class NN(ML_Template):
 
         y_pred_np = np.array(y_pred).flatten()
 
-
         return test_acc.numpy(), y_pred_np
     
     
 
 class Sequential_Models():
+    """
+    class: Sequential_Models
 
+    Class contain ing various models used within the project.
+    Example models and experiments are also included
+
+    Methods:
+        CNN(): Customised and scalable CNN model
+        CNN_final(): Final CNN used for Task A
+        ResNet(): Resnet using keras resnet_50
+    """
 
     def CNN(dropout_rate: float = 0.5,layer : ArrayLike = [32,64,64]):
+        """
+        function: CNN
+
+        Customised CNN that can be modifed through variables. Used to explore 
+        filter size and shape
+
+        args:
+            dropout_rate (int): Drop out rate hyper perameter
+            layer (ArrayLike): Filter size of sequential Conv2D layers
+        
+        return:
+            Model: Complied CNN model
+
+        """
         model = models.Sequential()
 
         model.add(layers.Input(shape=(28, 28, 1)))
@@ -271,44 +426,65 @@ class Sequential_Models():
         return model
 
     def CNN_final(dropout_rate: float = 0.25):
-            model = models.Sequential()
+        """
+        function: CNN
 
-            model.add(layers.Input(shape=(28, 28, 1)))
+        Final Model used for Binary Classifcation Task
 
+        args:
+            dropout_rate (int): Dropout rate hyperperameter
+        
+        return:
+            Model: Complied CNN model
+        """
+        model = models.Sequential()
 
+        model.add(layers.Input(shape=(28, 28, 1)))
                 
-            model.add(layers.Conv2D(32, (3, 3), 
-                                        activation='relu',
-                                        padding='same',
-                                        strides=1))
-            model.add(layers.Conv2D(32, (3, 3), 
-                                        activation='relu'))
+        model.add(layers.Conv2D(32, (3, 3), 
+                                    activation='relu',
+                                    padding='same',
+                                    strides=1))
+        model.add(layers.Conv2D(32, (3, 3), 
+                                    activation='relu'))
             
-            model.add(layers.MaxPooling2D((2, 2)))
+        model.add(layers.MaxPooling2D((2, 2)))
 
-            model.add(layers.Dropout(dropout_rate))
+        model.add(layers.Dropout(dropout_rate))
 
-            model.add(layers.Conv2D(64, (3, 3), 
-                                        activation='relu',
-                                        padding='same',
-                                        strides=1))
-            model.add(layers.Conv2D(64, (3, 3), 
-                                        activation='relu'))
+        model.add(layers.Conv2D(64, (3, 3), 
+                                    activation='relu',
+                                    padding='same',
+                                    strides=1))
+        model.add(layers.Conv2D(64, (3, 3), 
+                                    activation='relu'))
 
-            model.add(layers.MaxPooling2D((2, 2)))
+        model.add(layers.MaxPooling2D((2, 2)))
 
-            model.add(layers.Flatten())
+        model.add(layers.Flatten())
             
-            model.add(layers.Dropout(0.5))
+        model.add(layers.Dropout(0.5))
 
-            model.add(layers.Dense(64, 
-                                activation='relu'))
+        model.add(layers.Dense(64, 
+                            activation='relu'))
             
-            model.add(layers.Dense(1, activation='sigmoid'))
+        model.add(layers.Dense(1, activation='sigmoid'))
 
-            return model
+        return model
 
     def ResNet(dropout_rate: float = 0.5):
+        """
+        function: ResNet
+
+        Exploration in transfer learning. Not used in final
+        report
+
+        args:
+            dropout_rate (int): Dropout rate hyperperameter
+        
+        return:
+            Model: Complied CNN model
+        """
         model = models.Sequential()
 
         model.add(layers.Input(shape=(28, 28, 1)))
@@ -328,5 +504,3 @@ class Sequential_Models():
 
         return model
     
-    def MobileNet():
-        pass

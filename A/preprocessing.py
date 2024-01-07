@@ -3,6 +3,7 @@
 import numpy as np
 import random
 from scipy.ndimage import rotate
+from numpy.typing import ArrayLike
 
 class PreProcessing():
     """
@@ -25,7 +26,7 @@ class PreProcessing():
     Example:
         task_instance = TaskA(Dataset, Labels)
     """
-    def __init__(self,Dataset=None,Labels=None) -> None:
+    def __init__(self, Dataset=None, Labels=None) -> None:
         """
         __init__
         Sets datasets to be processed
@@ -47,13 +48,16 @@ class PreProcessing():
         """
         function: rotate
 
-        Randomly roatates the provided datasetm, filling the background
+        Randomly roatates the provided dataset, filling the background
         with the average colour
 
+        return:
+            to_return (ArrayLike): Array of rotated images
+
         Example:
-            roated = PreProcessing(Dataset, Labels).rotate()
+            rotated = PreProcessing(Dataset, Labels).rotate()
         """
-        Rotated = []
+        to_return = []
         back_patch = (20, 20)
 
         for Image in self.Dataset:
@@ -63,12 +67,11 @@ class PreProcessing():
             rotated_image = rotate(Image, angle, reshape=False)
             mask = rotated_image <= 0
             rotated_image[mask] = bg_color
-            Rotated.append(rotated_image)
+            to_return.append(rotated_image)
         
-        to_return = Rotated#np.array(Rotated).reshape((len(Rotated), 28, 28, 1))
         return to_return
 
-    def noise(self, mean=0, sigma=5):
+    def noise(self, mean: int = 0, sigma: int = 5):
         """
         function: noise
 
@@ -78,21 +81,34 @@ class PreProcessing():
         mean (int): mean value of the GAN
         sigma (int): divation of the GAN
 
+        return:
+            to_return (ArrayLike): Array of images with GAN
+
         Example:
             task_instance = PreProcessing(Dataset, Labels).noise()
         """
-        Noisy = []
+        to_return = []
 
         for Image in self.Dataset:
             noise = np.random.normal(mean, sigma, np.shape(Image))
             noisy_image = np.clip(Image + noise, 0, 255)
-            Noisy.append(noisy_image)
+            to_return.append(noisy_image)
 
-        to_return = Noisy#np.array(Noisy)
         return np.array(to_return)
 
     def flip(self):
-        flipped = []
+        """
+        function: flip
+
+        Randomly flips images upon both axis
+
+        return:
+            to_return (ArrayLike): Array of flipped images
+
+        Example:
+            flip = PreProcessing(Dataset, Labels).rotate()
+        """
+        to_return = []
         for Image in self.Dataset:
             type = random.randint(0, 2)
 
@@ -106,31 +122,59 @@ class PreProcessing():
                 flipped_image = np.flip(Image,axis=0)
                 flipped_image = np.flip(flipped_image,axis=1)
 
-            flipped.append(flipped_image )
+            to_return.append(flipped_image )
 
-        to_return = flipped#np.array(Flipped)
         return to_return
     
-    def new_Data(self,Loops=1):
-        Processed = self.Dataset.copy()
-        Labels = self.Labels.copy()
-        for Loop in range(0,Loops):
+    def new_Data(self, loops: int = 1):
+        """ 
+        function: new_Data
+
+        generates new data from provided dataset
+
+        args:
+            loops: number of times the dataset should be expanded
+
+        return:
+            processed(ArrayLike): array of new data
+            labels (ArrayLike): array of labels for Processed
+
+        Example:
+            data = PreProcessing(Dataset, Labels).new_Data(3)
+        """
+        processed = self.Dataset.copy()
+        labels = self.Labels.copy()
+        for loop in range(0,loops):
             Flipped = PreProcessing(self.Dataset,self.Labels).flip()
             Noise = PreProcessing(Flipped,self.Labels).noise()
             Rotated = PreProcessing(Noise,self.Labels).rotate()
 
             Rotated = np.array(Rotated).reshape((len(Rotated), 28, 28, 1))
-            Processed = np.concatenate((Processed, Rotated), axis=0)
-            Labels = np.concatenate((Labels, self.Labels), axis=0)
-        return Processed, Labels
+            processed = np.concatenate((processed, Rotated), axis=0)
+            labels = np.concatenate((labels, self.Labels), axis=0)
 
-    def normalisation(Dataset):
+        return processed, labels
 
-        normalized_images = Dataset.astype('float32') / 255.0
+    def normalisation(Dataset: ArrayLike):
+        """ 
+        function: normalisation
 
-        mean = np.mean(normalized_images, axis=(0, 1, 2))
-        std = np.std(normalized_images, axis=(0, 1, 2))
+        normalises, centers and standardises provided images
 
-        normalized_images = (normalized_images - mean) / std
+        args:
+             Dataset (ArrayLike): Array of images to be normalised
+
+        return:
+            to_return (ArrayLike): Array of normalised images
+
+        Example:
+            normalisation = PreProcessing(Dataset, Labels).normalisation()
+        """
+        normalised_images = Dataset.astype('float32') / 255.0
+
+        mean = np.mean(normalised_images, axis=(0, 1, 2))
+        std = np.std(normalised_images, axis=(0, 1, 2))
+
+        to_return = (normalised_images - mean) / std
         
-        return normalized_images
+        return to_return
