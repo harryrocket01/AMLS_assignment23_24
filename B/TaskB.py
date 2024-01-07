@@ -4,8 +4,6 @@ Binary and Multivariate Classification
 Author - Harry Softley-Graham
 Written - Nov 2023 - Jan 2024
 """
-
-
 #Custom Function Imports
 from PreProcessing import PreProcessing
 from Plotting import Plotting
@@ -76,7 +74,7 @@ class Task_B:
     def RunNN(self, model_name: str = "resnet"):
         image_directory = "./B/Graphics/CNN/"
 
-        epochs = 30
+        epochs = 20
         learning_rate = 0.001
         batch_size = 32
 
@@ -89,18 +87,17 @@ class Task_B:
         print(history)
         if history:
             x_scale =  np.linspace(1, len(history["train_acc"]),num=len(history["train_acc"]), endpoint=True)
-            fig, axs = Plotting().Line_Plot(x = x_scale, y = [history["train_acc"],history["val_acc"]],
-                                            title ="Epochs Vs Accuracy for task A Final Model",
-                                            x_label ="No. of Epochs", 
-                                            y_label ="Accuracy", 
-                                            legend = ["Train Accuracy","Validation Accuracy"])
+            fig, axs = Plotting().acc_loss_plot(history["train_acc"],history["train_loss"],
+                                                history["val_acc"],history["val_loss"],
+                                                x_scale,"Accuracy-Loss Plot for Final Model")
+
             axs.figure.savefig(image_directory+model_name+"_Accuracy_plot.pdf")
         
         print("\nRESULTS\n")
         
         accuracy, result = Model.Test()
-        print(result)
         print(self.y_test)
+
         true_labels = np.argmax(self.y_test,  axis=1)
 
         Plotting().metrics(true_labels,result)

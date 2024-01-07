@@ -202,9 +202,7 @@ class MV_CNN(ML_Template):
         test_acc_metric.reset_states()
 
         y_pred_np = np.array(y_pred)
-
-        print(y_pred_np.tolist())
-
+        print(y_pred_np)
         #convert back from one hot encoded
         y_pred_np = np.argmax(y_pred_np,  axis=1)
 
@@ -238,7 +236,7 @@ class Sequential_Models():
         model.add(layers.Dense(64, 
                                activation='relu'))
         
-        model.add(layers.Dense(9, activation="softmax"))
+        model.add(layers.Dense(9,activation="softmax"))
 
         return model
     
@@ -276,12 +274,12 @@ class Sequential_Models():
             model.add(layers.Dense(64, 
                                 activation='relu'))
             
-            model.add(layers.Dense(9, activation="softmax"))
+            model.add(layers.Dense(9,activation="softmax"))
 
             return model
 
         
-    def Deep(dropout_rate: float = 0.25):
+    def Deep(dropout_rate: float = 0.2):
             model = models.Sequential()
 
             model.add(layers.Input(shape=(28, 28, 3)))
@@ -324,12 +322,12 @@ class Sequential_Models():
 
             model.add(layers.GlobalAveragePooling2D())
             
-            model.add(layers.Dropout(0.5))
+            model.add(layers.Dropout(dropout_rate))
 
             model.add(layers.Dense(64, 
                                 activation='relu'))
             
-            model.add(layers.Dense(9, activation="softmax"))
+            model.add(layers.Dense(9,activation="softmax"))
 
             return model
 
@@ -353,7 +351,7 @@ class Sequential_Models():
 
         return model
 
-    def ResNet(dropout_rate: int = 0.5):
+    def ResNet(dropout_rate: int = 0.2):
         inputs = keras.Input(shape=(28, 28, 3))
         main_path = layers.Conv2D(32, (3, 3), 
                                   activation="relu")(inputs)
@@ -383,7 +381,7 @@ class Sequential_Models():
         main_path = layers.Dense(128, 
                                  activation="relu")(main_path)
         main_path = layers.Dropout(dropout_rate)(main_path)
-        outputs = layers.Dense(9, activation="softmax")(main_path)
+        outputs = layers.Dense(9,activation="softmax")(main_path)
 
         model = keras.Model(inputs, outputs, name="Residual_Network")
 
@@ -392,47 +390,35 @@ class Sequential_Models():
 
     def ResNet_2(dropout_rate: int = 0.5):
         inputs = keras.Input(shape=(28, 28, 3))
-        main_path = layers.Conv2D(32, (3, 3), 
-                                  activation="relu")(inputs)
-        main_path = layers.Conv2D(64, (3, 3), 
-                                  activation="relu")(main_path)
+        main_path = layers.Conv2D(32, (3, 3), activation="relu")(inputs)
+        main_path = layers.Conv2D(64, (3, 3), activation="relu")(main_path)
 
-        output_1 = layers.MaxPooling2D((2,2))(main_path)
+        output_1 = layers.MaxPooling2D((2, 2))(main_path)
 
-        main_path = layers.Conv2D(64, 3, activation="relu", 
-                                  padding="same")(output_1)
-        main_path = layers.Conv2D(64, 3, activation="relu", 
-                                  padding="same")(main_path)
+        main_path = layers.Conv2D(64, 3, activation="relu", padding="same", strides=1)(output_1)
+        main_path = layers.Conv2D(64, 3, activation="relu", padding="same", strides=1)(main_path)
         output_2 = layers.add([main_path, output_1])
 
-        main_path = layers.Conv2D(128, 3, activation="relu", 
-                                  padding="same")(output_2)
-        main_path = layers.Conv2D(128, 3, activation="relu", 
-                                  padding="same")(main_path)
+        main_path = layers.Conv2D(64, 3, activation="relu", padding="same", strides=1)(output_2)
+        main_path = layers.Conv2D(64, 3, activation="relu", padding="same", strides=1)(main_path)
         output_3 = layers.add([main_path, output_2])
 
-        main_path = layers.Conv2D(128, 3, activation="relu", 
-                                  padding="same")(output_3)
-        main_path = layers.Conv2D(128, 3, activation="relu", 
-                                  padding="same")(main_path)
+        main_path = layers.Conv2D(64, 3, activation="relu", padding="same", strides=1)(output_3)
+        main_path = layers.Conv2D(64, 3, activation="relu", padding="same")(main_path)
         output_4 = layers.add([main_path, output_3])
 
-        main_path = layers.Conv2D(64, 3, activation="relu", 
-                                  padding="same")(output_2)
-        main_path = layers.Conv2D(64, 3, activation="relu", 
-                                  padding="same")(main_path)
+        main_path = layers.Conv2D(64, 3, activation="relu", padding="same", strides=1)(output_4)
+        main_path = layers.Conv2D(64, 3, activation="relu", padding="same")(main_path)
         block_5_output = layers.add([main_path, output_4])
-       
-        main_path = layers.Conv2D(64, (3, 3), 
-                                  activation="relu")(block_5_output)
 
-        main_path = layers.MaxPooling2D((2,2))(main_path)
+        main_path = layers.Conv2D(64, (3, 3), activation="relu")(block_5_output)
+
+        main_path = layers.MaxPooling2D((2, 2))(main_path)
 
         main_path = layers.GlobalAveragePooling2D()(main_path)
-        main_path = layers.Dense(128, 
-                                 activation="relu")(main_path)
+        main_path = layers.Dense(128, activation="relu")(main_path)
         main_path = layers.Dropout(dropout_rate)(main_path)
-        outputs = layers.Dense(9, activation="softmax")(main_path)
+        outputs = layers.Dense(9,activation="softmax")(main_path)
 
         model = keras.Model(inputs, outputs, name="Residual_Network")
 

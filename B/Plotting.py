@@ -86,6 +86,36 @@ class Plotting ():
         return fig, axs
     
     
+    def acc_loss_plot(self, acc: ArrayLike, loss: ArrayLike, val_acc: ArrayLike, val_loss: ArrayLike,
+                       x_axis, title: str):
+        
+        fig, axs = plt.subplots()
+        axs2 = axs.twinx() 
+
+        axs.set_xlabel('Epochs')
+        axs.set_ylabel('Accuracy', color="tab:red")
+        axs.plot(x_axis, acc, color="tab:red",label = 'Train Accuracy')
+        axs.plot(x_axis, val_acc, color="tab:red", alpha=0.6,label = 'Val Accuracy')
+
+        axs.tick_params(axis='y', labelcolor="tab:red")
+
+
+        axs2.set_ylabel('Loss', color="tab:blue")
+        axs2.plot(x_axis, loss, color="tab:blue",label = 'Train Loss')
+        axs2.plot(x_axis, val_loss, color="tab:blue", alpha=0.6 ,label = 'Val Loss')
+        axs2.tick_params(axis='y', labelcolor="tab:blue")
+
+        lines, labels = axs.get_legend_handles_labels()
+        lines2, labels2 = axs2.get_legend_handles_labels()
+        axs2.legend(lines + lines2, labels + labels2, loc="lower right")
+        
+        axs.set_title(title)
+
+        fig.set_size_inches(5.5, 3)
+        fig.set_tight_layout(True)
+
+        return fig, axs
+    
     def metrics(self, true_labels:ArrayLike, pred_labels:ArrayLike):
         true_labels = np.array(true_labels)
         pred_labels = np.array(pred_labels)
