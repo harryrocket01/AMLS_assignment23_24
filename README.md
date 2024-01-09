@@ -19,7 +19,7 @@ A range of packages were used. Including the environment file to duplicate the e
 | numpy | List all new or modified files |
 | seaborn | List all new or modified files |
 | SciPy | List all new or modified files |
-| Scit-Learn | List all new or modified files |
+| Scikit learn | List all new or modified files |
 | Tensor Flow | List all new or modified files |
 
 ### Installing
