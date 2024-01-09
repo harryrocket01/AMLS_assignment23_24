@@ -16,11 +16,12 @@ A range of packages were used. Including the environment file to duplicate the e
 
 | Package | Version |
 | --- | --- |
-| numpy | List all new or modified files |
-| seaborn | List all new or modified files |
-| SciPy | List all new or modified files |
-| Scikit learn | List all new or modified files |
-| Tensor Flow | List all new or modified files |
+| numpy | 1.24.1 |
+| seaborn | 0.13.0 |
+| SciPy | 1.11.3 |
+| Scikit learn | 1.3.2 |
+| Tensor Flow | 2.15.0 |
+| matplotlib | 3.6.3 |
 
 ### Installing
 
