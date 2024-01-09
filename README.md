@@ -1,6 +1,6 @@
 # AMLS_assignment23_24
 
-This is the code base for a Binary and Mucli-class medical data classification. This was coded as the final assessment for ELEC0134: AMLS.
+This is the code base for a Binary and Multi-class medical data classification. This was coded as the final assessment for ELEC0134: AMLS.
 
 ## Description
 
