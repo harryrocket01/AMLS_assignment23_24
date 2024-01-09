@@ -69,7 +69,7 @@ Two machines were used to build, train and evaluate the models. The first is a X
 | Graphics Card | 1650 Ti | RTX 3070 |
 
 ## File Structure
-
+```
 ├───A
 │   ├───Graphics
 │   │   ├───CNN
@@ -89,7 +89,7 @@ Two machines were used to build, train and evaluate the models. The first is a X
 │   │   └───__pycache__
 │   └───__pycache__
 └───Datasets
-
+```
 ## Authors
 
 Contributors names and contact info
