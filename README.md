@@ -70,12 +70,31 @@ Two machines were used to build, train and evaluate the models. The first is a X
 
 ## File Structure
 
+├───A
+│   ├───Graphics
+│   │   ├───CNN
+│   │   │   └───Layers
+│   │   ├───RF
+│   │   └───SVM
+│   ├───Models
+│   │   ├───PreTrainedModels
+│   │   └───__pycache__
+│   └───__pycache__
+├───B
+│   ├───Graphics
+│   │   └───CNN
+│   │       └───Layers
+│   ├───Models
+│   │   ├───PreTrainedModels
+│   │   └───__pycache__
+│   └───__pycache__
+└───Datasets
 
 ## Authors
 
 Contributors names and contact info
 
-ex. Harry R J Softley-Graham  - SN: 19087176
+Harry R J Softley-Graham  - SN: 19087176
 
 ## Aknowledgements
 
