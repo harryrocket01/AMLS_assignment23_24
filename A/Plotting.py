@@ -7,9 +7,9 @@ from sklearn.metrics import confusion_matrix
 
 class Plotting ():
     """
-    class: PreProcessing
+    class: Plotting
 
-    Utility class for preprocessing data in task A
+    Plotting class used to plot data in task A
 
     Attributes:
         plt.rcParams: Matplot Lib instances with IEEE plotting styling
@@ -337,7 +337,8 @@ class Plotting ():
         """
         function: metrics
 
-        Creates plot that compares 3 learningrates on the same model
+        Generates metrics used to evaluate models. This includes:
+        accuracy,precision,recall,specificity and f1 score.
         
         args:
             true_labels (ArrayLike): Array of True Labels

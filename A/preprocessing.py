@@ -1,4 +1,9 @@
-
+"""
+AMLS 1 Final Assessment - PreProcessing.py
+Binary and Multivariate Classification
+Author - Harry Softley-Graham
+Written - Nov 2023 - Jan 2024
+"""
 
 import numpy as np
 import random
@@ -24,7 +29,7 @@ class PreProcessing():
         New_Data(): expands dataset, applying augmentation
         Normalisation(): normalises images within dataset
     Example:
-        task_instance = TaskA(Dataset, Labels)
+        task_instance = PreProcessing(Dataset, Labels)
     """
     def __init__(self, Dataset=None, Labels=None) -> None:
         """

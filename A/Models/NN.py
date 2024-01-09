@@ -19,6 +19,8 @@ from keras import layers
 from tensorflow.keras import datasets, layers, models,optimizers
 from tensorflow.keras.applications import ResNet50
 
+from tensorflow.keras.models import Model
+import matplotlib.pyplot as plt
 
 class NN(ML_Template):
     """
@@ -129,8 +131,8 @@ class NN(ML_Template):
         #Check if there is a file
         filename = 'A\Models\PreTrainedModels\{}Model.keras'.format(self.name)
         try:
-            self.model = tf.keras.models.load_model(filename)
-            
+            self.model = tf.keras.models.load_model(filename)            
+
             if verbose:
                 print("\nPre Trained Model Loaded - {}Model.keras".format(self.name))
             return None
@@ -372,13 +374,37 @@ class NN(ML_Template):
 
         return test_acc.numpy(), y_pred_np
     
+    def visualise_layers(self):
+        """
+        function: visualise_layers
+        
+        Creates plots of feature importance for each layer of the network
+        """
+        for x in range(0,len(self.model.layers)-1):
+            try:
+                activation_model = Model(inputs=self.model.inputs, outputs=self.model.layers[x].output)
+                
+                img_tensor = self.X_test[0]
+                img_tensor = np.expand_dims(img_tensor, axis=0)
+                activation = activation_model(img_tensor)
+
+                plt.figure(figsize=(20,20))
+                for i in range(16):
+                    plt.subplot(4,4,i+1)
+                    plt.imshow(activation[0,:,:,i])
+                plt.savefig('.\A.\Graphics\CNN\Layers\Layer{}.png'.format(x))
+                plt.close()
+            except:
+                pass
+
+    
     
 
 class Sequential_Models():
     """
     class: Sequential_Models
 
-    Class contain ing various models used within the project.
+    Class containing various models used within the project.
     Example models and experiments are also included
 
     Methods:
@@ -427,7 +453,7 @@ class Sequential_Models():
 
     def CNN_final(dropout_rate: float = 0.25):
         """
-        function: CNN
+        function: CNN_final
 
         Final Model used for Binary Classifcation Task
 
