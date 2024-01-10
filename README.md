@@ -69,6 +69,8 @@ Two machines were used to build, train and evaluate the models. The first is a X
 | Graphics Card | 1650 Ti | RTX 3070 |
 
 ## File Structure
+
+Below is the file structure of the code base. A contains all of the files used within Task A. B contains all the file in task B. The Task_ file contains the code to run the task. Models contain the code along with the keras files of pre-trained deep learning models.
 ```
 ├───A
 │   ├───Graphics
@@ -77,22 +79,27 @@ Two machines were used to build, train and evaluate the models. The first is a X
 │   │   ├───RF
 │   │   └───SVM
 │   ├───Models
-│   │   ├───PreTrainedModels
-│   │   └───__pycache__
-│   └───__pycache__
+│   |   ├───SVM.py  
+│   |   ├───RF.py  
+│   |   ├───CNN.py  
+│   |   └───ML_Template.py  
+│   ├───TaskA.py
+│   ├───PreProcessing.py
+│   └───Plotting.py
 ├───B
 │   ├───Graphics
 │   │   └───CNN
 │   │       └───Layers
 │   ├───Models
-│   │   ├───PreTrainedModels
-│   │   └───__pycache__
-│   └───__pycache__
+│   |   ├───PreTrainedModels
+│   |   ├───CNN.py  
+│   |   └───ML_Template.py
+│   ├───TaskB.py
+│   ├───PreProcessing.py
+│   └───Plotting.py
 └───Datasets
 ```
 ## Authors
-
-Contributors names and contact info
 
 Harry R J Softley-Graham  - SN: 19087176
 
