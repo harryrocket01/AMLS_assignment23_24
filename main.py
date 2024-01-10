@@ -14,6 +14,8 @@ import sys
 
 
 if __name__ == "__main__":
+
+    #Only Accepts 2 Arguments after main.py
     if len(sys.argv) != 3:
         print("Usage: python main.py <Task_A_Function> <Task_B_Function>")
 
@@ -25,7 +27,7 @@ if __name__ == "__main__":
         task_a = "final"
         task_b = "final"
 
-
+    #TASK A - Binary Classifcation
     task_a_instance = TaskA()
 
     if task_a == "svm":
@@ -41,11 +43,10 @@ if __name__ == "__main__":
     else:
         print(f"Unsupported input for Task A: {task_a}")
 
-
+    #TASK B - Multi Class Classifcation
     task_b_instance = TaskB()
 
     if task_b == "taska":
-
         task_b_instance.run_nn(model_name="taska")
     elif task_b == "deep":
         task_b_instance.run_nn(model_name="deep")
