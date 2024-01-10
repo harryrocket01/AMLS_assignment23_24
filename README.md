@@ -82,7 +82,7 @@ Below is the file structure of the code base. A contains all of the files used w
 │   |   ├───SVM.py  
 │   |   ├───RF.py  
 │   |   ├───CNN.py  
-│   |   └───ML_Template.py  
+│   |   └───Template.py  
 │   ├───TaskA.py
 │   ├───PreProcessing.py
 │   └───Plotting.py
@@ -92,8 +92,8 @@ Below is the file structure of the code base. A contains all of the files used w
 │   │       └───Layers
 │   ├───Models
 │   |   ├───PreTrainedModels
-│   |   ├───CNN.py  
-│   |   └───ML_Template.py
+│   |   ├───MC_NN.py  
+│   |   └───Template.py
 │   ├───TaskB.py
 │   ├───PreProcessing.py
 │   └───Plotting.py
