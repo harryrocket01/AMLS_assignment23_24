@@ -225,7 +225,7 @@ class TaskA:
 
     def run_cnn(self):
         """
-        function: run_adaboost
+        function: run_cnn
         
         Creates, trains and validates random fianl CNN model for Task A.
         This is the final model chosen for this task, and produces a graph for 
